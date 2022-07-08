@@ -151,8 +151,6 @@ export function NewUserTemplate({ user }: Props) {
 
   useEffect(validate, [validateData, isLoading, email_address, username]);
 
-  useEffect(() => alert("HEY"), [validateData]);
-
   return (
     <>
       <Stack
