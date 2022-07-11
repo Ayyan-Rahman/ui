@@ -55,7 +55,7 @@ export function Index({ ...props }) {
           opacity: { duration: 0.5 },
         }}
       >
-        <Title>Build your Web3 professional identity</Title>
+        <Title>{`Gateway\nThe Web3 Professional Network`}</Title>
         <Typography
           marginBottom={5}
           variant="body1"
@@ -64,7 +64,12 @@ export function Index({ ...props }) {
         >
           Where talent take ownership of their work and professional growth.
         </Typography>
-        <Button variant="contained" size="medium">
+        <Button
+          variant="contained"
+          size="medium"
+          href="https://blb4ytkp5bp.typeform.com/to/Wqn3x1Tu"
+          target="_blank"
+        >
           Enter the Gateway
         </Button>
       </MotionBox>
@@ -85,7 +90,7 @@ export function Index({ ...props }) {
         sx={{
           background: '#10041C',
           width: '100%',
-          padding: 4,
+          padding: 2,
         }}
       >
         <Stack
