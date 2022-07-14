@@ -107,7 +107,7 @@ export default function PocModalCreated({
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         sx={{
-          overflowY: 'auto'
+          overflowY: 'auto',
         }}
       >
         <Box sx={style}>
@@ -121,7 +121,7 @@ export default function PocModalCreated({
             <IconButton
               aria-label="close"
               onClick={() => {
-                handleClose();
+                // handleClose();
                 router.push('/profile');
               }}
               sx={{
@@ -214,6 +214,9 @@ export default function PocModalCreated({
                 value={url}
                 inputProps={{
                   readOnly: true,
+                }}
+                InputLabelProps={{
+                  shrink: true,
                 }}
                 InputProps={{
                   endAdornment: (
