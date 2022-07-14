@@ -133,7 +133,7 @@ export function EditProfileTemplate({ user }: Props) {
         ...(upload !== null && {
           pfp:
             'https://api.staging.mygateway.xyz/storage/file?id=' +
-            upload?.upload_image?.file.id,
+            upload?.upload_image?.id,
         }),
         discord_id: null,
       },

@@ -1,19 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
+import normalizeUrl from 'normalize-url';
 import { FaDiscord } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 
-import { TOKENS } from '@gateway/theme';
+import { theme, TOKENS } from '@gateway/theme';
 import { useMenu } from '@gateway/ui';
 
-import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
-import ArticleIcon from '@mui/icons-material/Article';
+import { LinkOutlined } from '@mui/icons-material';
 import EmailIcon from '@mui/icons-material/Email';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import LooksOneIcon from '@mui/icons-material/LooksOne';
 import RedditIcon from '@mui/icons-material/Reddit';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import {
@@ -40,10 +40,8 @@ import Tooltip from '@mui/material/Tooltip';
 
 import { ROUTES } from '../../../constants/routes';
 import { gqlAnonMethods, gqlMethods } from '../../../services/api';
-import HoldersModal from '../../organisms/holders-modal/holders-modal';
-import normalizeUrl from 'normalize-url';
-import { LinkOutlined } from '@mui/icons-material';
 import { CredentialCategories } from '../../molecules/credential-card';
+import HoldersModal from '../../organisms/holders-modal/holders-modal';
 
 const DetailsFieldset = ({ children }) => (
   <fieldset
@@ -108,31 +106,23 @@ export function ViewCredentialTemplate({ credential }) {
           cursor: 'pointer',
         }}
       >
-        {/*
-        <Tooltip title="SHARE ON">
-          <IconButton onClick={onOpen}>
-            <Badge
-              overlap="circular"
-              sx={{
-                [`.${badgeClasses.badge}`]: {
-                  borderRadius: '100%',
-                  backgroundColor: (theme) => theme.palette.common.white,
-                  color: (theme) => theme.palette.secondary.contrastText,
-                  width: (theme) => theme.spacing(2.5),
-                  height: (theme) => theme.spacing(2.5),
-                  top: 'unset',
-                  bottom: (theme) => `calc(50% - ${theme.spacing(2.5)})`,
-                  right: '-10%',
-                  boxShadow: (theme) => theme.shadows[1],
-                },
-              }}
-            >
-              <IosShareIcon style={{ marginRight: '15px', color: '#ffffff' }} />
+        <Tooltip title="Share">
+          <IconButton
+            onClick={onOpen}
+            sx={{
+              marginRight: '10px',
+            }}
+          >
+            <Badge overlap="circular">
+              <IosShareIcon style={{ color: '#ffffff' }} />
             </Badge>
           </IconButton>
         </Tooltip>
         <Menu
-          sx={{ mt: (theme) => theme.spacing(7) }}
+          sx={{
+            mt: (theme) => theme.spacing(7),
+            borderRadius: 8,
+          }}
           id="menu-appbar"
           anchorEl={element}
           anchorOrigin={{
@@ -147,16 +137,19 @@ export function ViewCredentialTemplate({ credential }) {
           open={isOpen}
           onClose={onClose}
         >
-          <Typography sx={{ margin: '2px 15px 2px 10px', fontSize: '12px' }}>
+          <Typography
+            variant="overline"
+            sx={{
+              marginY: (theme) => theme.spacing(1),
+              marginX: (theme) => theme.spacing(2),
+            }}
+          >
             SHARE ON
           </Typography>
           <MenuItem
             key="email"
             onClick={(e) => {
-              const mailBody = 'body';
-              window.location.href =
-                'mailto:yourmail@domain.com?subject=hii&body=' + mailBody;
-              e.preventDefault();
+              navigator.clipboard.writeText(window.location.href);
             }}
           >
             <Badge
@@ -164,12 +157,19 @@ export function ViewCredentialTemplate({ credential }) {
               sx={{ display: 'block', margin: '5px 32px 5px 0px' }}
             >
               <Avatar>
-                <EmailIcon></EmailIcon>
+                <LinkOutlined></LinkOutlined>
               </Avatar>
             </Badge>
-            <Typography textAlign="center">Email</Typography>
+            <Typography textAlign="center">Link</Typography>
           </MenuItem>
-          <MenuItem key="reddit">
+          <MenuItem
+            key="reddit"
+            onClick={() =>
+              window.open(
+                `https://www.reddit.com/submit?url=${window.location.href}&title=I just earned the "${credential.name}" credential on Gateway!`
+              )
+            }
+          >
             <Badge
               overlap="circular"
               sx={{ display: 'block', margin: '5px 32px 5px 0px' }}
@@ -180,7 +180,14 @@ export function ViewCredentialTemplate({ credential }) {
             </Badge>
             <Typography textAlign="center">Reddit</Typography>
           </MenuItem>
-          <MenuItem key="twitter">
+          <MenuItem
+            key="twitter"
+            onClick={() =>
+              window.open(
+                `http://twitter.com/share?text=Hey, I just got "${credential.name}" credential on Gateway!&url=${window.location.href}`
+              )
+            }
+          >
             <Badge
               overlap="circular"
               sx={{ display: 'block', margin: '5px 32px 5px 0px' }}
@@ -191,18 +198,7 @@ export function ViewCredentialTemplate({ credential }) {
             </Badge>
             <Typography textAlign="center">Twitter</Typography>
           </MenuItem>
-          <MenuItem sx={{ paddingRight: '85px' }} key="discord">
-            <Badge
-              overlap="circular"
-              sx={{ display: 'block', margin: '5px 32px 5px 0px' }}
-            >
-              <Avatar>
-                <FaDiscord />
-              </Avatar>
-            </Badge>
-            <Typography textAlign="center">Discord</Typography>
-          </MenuItem>
-        </Menu>*/}
+        </Menu>
 
         {session.data?.user && (
           <Button
@@ -255,24 +251,24 @@ export function ViewCredentialTemplate({ credential }) {
               Basic Details of Credential
             </Typography>
           </Grid>
-          <Grid item xs={5}>
-            <Stack direction={{ xs: 'column', sm: 'row' }}>
+          <Grid item xs>
+            <Stack direction={{ xs: 'row' }} alignItems="flex-start">
               {/* TODO: Responsiveness */}
-              <Image
+              <img
                 src={credentialImgUrl}
-                height={389}
-                width={389}
                 alt="credential image"
-                style={{ borderRadius: '5px', objectFit: 'cover', objectPosition: 'center' }}
+                style={{
+                  borderRadius: '5px',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  width: '250px',
+                }}
               />
               <Box
                 sx={{
-                  position: 'relative',
-                  minHeight: '300px',
-                  marginTop: '10px',
+                  marginLeft: '30px',
+                  alignSelf: 'flex-start',
                 }}
-                ml={{ xs: '0px', sm: '32px' }}
-                minHeight={{ xs: '180px', md: '300px' }}
               >
                 <Typography
                   variant="h6"
@@ -280,21 +276,19 @@ export function ViewCredentialTemplate({ credential }) {
                 >
                   {credential.name}
                 </Typography>
-                {credential.categories.map((category) => (<Chip label={CredentialCategories[category]} sx={{ marginBottom: '20px' }} />))}
+                {credential.categories.map((category, idx) => (
+                  <Chip
+                    key={'category-' + (idx + 1)}
+                    label={CredentialCategories[category]}
+                    sx={{ marginBottom: '20px' }}
+                  />
+                ))}
                 <Box>
                   <Typography variant="caption" sx={{ fontSize: '16px' }}>
                     {credential.description}
                   </Typography>
                 </Box>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: '0',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'baseline',
-                  }}
-                >
+                <Box>
                   <Stack
                     direction={'row'}
                     alignItems={'center'}
@@ -347,7 +341,7 @@ export function ViewCredentialTemplate({ credential }) {
         </Grid>
         {(credential.status === 'pending' || 'to_mint' || 'minted') &&
           details && <Divider light sx={{ width: '100%' }} />}
-        {(credential.status === 'pending' || 'to_mint' || 'minted') && details && (
+        {/*(credential.status === 'pending' || 'to_mint' || 'minted') && details && (
           // Your details
           <Grid
             container
@@ -428,7 +422,7 @@ export function ViewCredentialTemplate({ credential }) {
           </Grid>
         )}
         {(credential.status === 'pending' || 'to_mint' || 'minted') &&
-          accomplishments && <Divider light sx={{ width: '100%' }} />}
+                      accomplishments && <Divider light sx={{ width: '100%' }} />*/}
         {(credential.status === 'pending' || 'to_mint' || 'minted') &&
           accomplishments && (
             <Grid
@@ -507,9 +501,13 @@ export function ViewCredentialTemplate({ credential }) {
               <Grid item md={7}>
                 {accomplishments &&
                   accomplishments.map((accomplishment, index) => (
-                    <Stack flexDirection="row" key={'accomplishment-' + index} sx={{
-                      marginBottom: 6
-                    }}>
+                    <Stack
+                      flexDirection="row"
+                      key={'accomplishment-' + index}
+                      sx={{
+                        marginBottom: 6,
+                      }}
+                    >
                       <Avatar
                         sx={{
                           marginRight: 4,
@@ -555,11 +553,15 @@ export function ViewCredentialTemplate({ credential }) {
                                     primary={pow.pow_description}
                                     secondary={
                                       <Link
-                                        href={normalizeUrl(pow.pow_link, { defaultProtocol: "https:" })}
+                                        href={normalizeUrl(pow.pow_link, {
+                                          defaultProtocol: 'https:',
+                                        })}
                                         variant="body1"
                                         target="_blank"
                                       >
-                                        {normalizeUrl(pow.pow_link, { defaultProtocol: "https:" })}
+                                        {normalizeUrl(pow.pow_link, {
+                                          defaultProtocol: 'https:',
+                                        })}
                                       </Link>
                                     }
                                     sx={{
@@ -577,9 +579,10 @@ export function ViewCredentialTemplate({ credential }) {
               </Grid>
             </Grid>
           )}
-        {(session.data?.user && (credential.status === 'to_complete' ||
-          credential.status === undefined) &&
-          !isIssuer) && (
+        {session.data?.user &&
+          (credential.status === 'to_complete' ||
+            credential.status === undefined) &&
+          !isIssuer && (
             <Button
               variant="contained"
               sx={{ margin: 'auto' }}
