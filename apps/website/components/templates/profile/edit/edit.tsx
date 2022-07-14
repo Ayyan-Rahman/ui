@@ -1,5 +1,7 @@
 import { useSession } from 'next-auth/react';
+import useTranslation from 'next-translate/useTranslation';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -11,8 +13,6 @@ import { gqlMethods } from '../../../../services/api';
 import { Users } from '../../../../services/graphql/types.generated';
 import { Form } from './form';
 import { schema, EditUserSchema, defaultValues } from './schema';
-import useTranslation from 'next-translate/useTranslation';
-import { useEffect } from 'react';
 
 type Props = {
   user: Partial<Users>;
@@ -67,6 +67,9 @@ export function EditProfileTemplate({ user }: Props) {
       onSuccess() {
         snackbar.handleClick({ message: 'Profile updated!' });
         router.push(ROUTES.PROFILE);
+      },
+      onError(err: any) {
+        snackbar.handleClick({ message: err.message, type: 'error' });
       },
     }
   );
@@ -138,7 +141,7 @@ export function EditProfileTemplate({ user }: Props) {
         onSuccess: () => router.push('/profile'),
         onError: () => {
           validate();
-        }
+        },
       }
     );
   };

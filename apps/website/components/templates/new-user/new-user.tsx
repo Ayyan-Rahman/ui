@@ -74,6 +74,9 @@ export function NewUserTemplate({ user }: Props) {
         snackbar.handleClick({ message: 'Profile updated!' });
         router.push(ROUTES.PROFILE);
       },
+      onError(err: any) {
+        snackbar.handleClick({ message: err.message, type: 'error' });
+      },
     }
   );
 
