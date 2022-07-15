@@ -13,7 +13,7 @@ export function UserData() {
 
   return (
     <CardHeader
-      sx={{wordBreak:"break-word"}}
+      sx={{ wordBreak: 'break-word' }}
       title={showIfNotEmpty(name, 'Display Name')}
       subheader={`@${showIfNotEmpty(username, 'username')}`}
     />

@@ -1,52 +1,16 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import { getSession } from 'next-auth/react';
 
 import { TOKENS } from '@gateway/theme';
 
 import { DashboardTemplate } from '../components/templates/dashboard';
 import { NewUserTemplate } from '../components/templates/new-user';
-import { ROUTES } from '../constants/routes';
-import { gqlMethods } from '../services/api';
+import { useAuth } from '../providers/auth';
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const session = await getSession({ req });
+export default function NewUser() {
+  const { me } = useAuth();
 
-  if (!session?.user) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: true,
-      },
-      props: {
-        user: null,
-      },
-    };
-  }
+  if (!me) return null;
 
-  const user = (await gqlMethods(session.user).get_new_user()).me;
-
-  if (user.init) {
-    return {
-      props: {
-        user: null,
-      },
-      redirect: {
-        destination: ROUTES.PROFILE,
-        permanent: true,
-      },
-    };
-  }
-  return {
-    props: {
-      user,
-    },
-  };
-};
-
-export default function NewUser({
-  user,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  if (!user) return null;
   return (
     <DashboardTemplate
       showExplore={false}
@@ -59,7 +23,7 @@ export default function NewUser({
         },
       }}
     >
-      <NewUserTemplate user={user} />
+      <NewUserTemplate />
     </DashboardTemplate>
   );
 }

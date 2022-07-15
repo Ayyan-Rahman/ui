@@ -10,7 +10,6 @@ export const temporaryDao: Dao = {
   name: 'Temporary Dao',
 };
 
-
 export const temporaryKnowledge = [
   { key: 1, label: 'The Shawshank Redemption' },
   { key: 2, label: 'The Godfather' },
@@ -19,8 +18,8 @@ export const temporaryKnowledge = [
   { key: 5, label: '12 Angry Men' },
   { key: 6, label: "Schindler's List" },
   { key: 7, label: 'Pulp Fiction' },
-  { key: 8, label: 'Don' }
-]
+  { key: 8, label: 'Don' },
+];
 export const temporarySkills = [
   { key: 1, label: 'Acquisition skills' },
   { key: 2, label: 'Analytical ability' },
@@ -29,8 +28,8 @@ export const temporarySkills = [
   { key: 5, label: 'Resilience' },
   { key: 6, label: 'Advice ability' },
   { key: 7, label: 'Relationship Management' },
-  { key: 8, label: 'Charisma' }
-]
+  { key: 8, label: 'Charisma' },
+];
 export const temporaryAttitudes = [
   { key: 1, label: 'The Shawshank Redemption' },
   { key: 2, label: 'The Godfather' },
@@ -39,5 +38,5 @@ export const temporaryAttitudes = [
   { key: 5, label: '12 Angry Men' },
   { key: 6, label: "Schindler's List" },
   { key: 7, label: 'Pulp Fiction' },
-  { key: 8, label: 'Don' }
-]
+  { key: 8, label: 'Don' },
+];

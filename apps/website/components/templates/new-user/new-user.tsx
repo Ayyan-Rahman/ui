@@ -13,28 +13,25 @@ import { useSnackbar } from '../../../hooks/use-snackbar';
 import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import { Users } from '../../../services/graphql/types.generated';
+import { queryClient } from '../../../services/query-client';
+import { SessionUser } from '../../../types/user';
 import { AvatarUploadCard } from './avatar-upload-card';
 import { Form } from './form';
 import { schema, NewUserSchema, defaultValues } from './schema';
 
-/*
-  TODO: Downsize the image to a max size
-  TODO: Create an api endpoint for photo manipulation
-*/
-type Props = {
-  user: Partial<Users>;
-};
-export function NewUserTemplate({ user }: Props) {
+export function NewUserTemplate() {
   const { t } = useTranslation('dashboard-new-user');
+
+  const { me } = useAuth();
+
   const methods = useForm<NewUserSchema>({
     resolver: yupResolver(schema),
-    defaultValues: defaultValues(user),
+    defaultValues: defaultValues(me),
   });
 
   const snackbar = useSnackbar();
 
   const router = useRouter();
-  const { me } = useAuth();
 
   const email_address = methods.watch('email_address') as string;
   const username = methods.watch('username') as string;
@@ -70,6 +67,19 @@ export function NewUserTemplate({ user }: Props) {
     'updateProfile',
     me && gqlMethods(me).update_user_profile,
     {
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries('me');
+
+        // Add optimistic todo to todos list
+        queryClient.setQueryData<SessionUser>('me', (old) => ({
+          ...old,
+          ...variables,
+          init: true,
+        }));
+
+        // Return context with the optimistic todo
+        return { variables };
+      },
       onSuccess() {
         snackbar.handleClick({ message: 'Profile updated!' });
         router.push(ROUTES.PROFILE);
@@ -126,7 +136,7 @@ export function NewUserTemplate({ user }: Props) {
     // 2. if not, update the user
     let upload = null;
 
-    if (data.pfp !== user.pfp) {
+    if (data.pfp !== me.pfp) {
       upload = await imageUploadMutation.mutateAsync({
         base64: data.pfp,
         name: 'pfp image',
@@ -135,12 +145,12 @@ export function NewUserTemplate({ user }: Props) {
 
     updateMutation.mutate(
       {
-        id: user.id,
+        id: me.id,
         ...data,
         ...(upload !== null && {
           pfp:
             'https://api.staging.mygateway.xyz/storage/file?id=' +
-            upload?.upload_image?.file.id,
+            upload?.upload_image?.id,
         }),
         about: '',
         discord_id: null,
@@ -192,7 +202,12 @@ export function NewUserTemplate({ user }: Props) {
                   display: { xs: 'flex', md: 'none' },
                 }}
               />
-              <Form onSubmit={onSubmit} isLoading={updateMutation.isLoading} />
+              <Form
+                onSubmit={onSubmit}
+                isLoading={
+                  updateMutation.isLoading || imageUploadMutation.isLoading
+                }
+              />
             </FormProvider>
           </Stack>
         </Stack>

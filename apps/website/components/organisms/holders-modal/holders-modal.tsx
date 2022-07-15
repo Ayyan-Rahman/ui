@@ -39,9 +39,9 @@ export default function HoldersModal({ holders, open, handleClose }) {
             Holders
           </Typography>
           <List
-          sx={{
-            mb: 2
-          }}
+            sx={{
+              mb: 2,
+            }}
           >
             {holders?.map(({ target }, index) => {
               const { name, pfp, username } = target;
@@ -52,7 +52,11 @@ export default function HoldersModal({ holders, open, handleClose }) {
                   <ListItemAvatar>
                     <Avatar alt={alt} src={pfp} />
                   </ListItemAvatar>
-                  <ListItemText sx={{wordBreak: 'break-all'}} primary={name} secondary={"@" + username} />
+                  <ListItemText
+                    sx={{ wordBreak: 'break-all' }}
+                    primary={name}
+                    secondary={'@' + username}
+                  />
                 </ListItem>
               );
             })}

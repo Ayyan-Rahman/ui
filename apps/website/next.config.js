@@ -19,7 +19,7 @@ const nextConfig = {
   },
   images: {
     domains: ['ipfs.mygateway.xyz'],
-  }
+  },
 };
 
 const sentryWebpackPluginOptions = {

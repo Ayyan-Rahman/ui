@@ -2,10 +2,13 @@ import { object, string, SchemaOf } from 'yup';
 
 import { SessionUser } from '../../../../types/user';
 
-export type EditUserSchema = Pick<
-  SessionUser,
-  'name' | 'username' | 'about' | 'email_address' | 'pfp'
->;
+export type EditUserSchema = {
+  name: string;
+  username: string;
+  about: string;
+  email_address: string;
+  pfp: string;
+};
 
 export const schema: SchemaOf<EditUserSchema> = object({
   name: string().min(2).defined(),

@@ -27,7 +27,7 @@ export function useConnectWallet() {
   }>();
   const router = useRouter();
 
-  const signIn = useLogin(() => router.push(ROUTES.PROFILE));
+  const signIn = useLogin();
 
   const sign = useSignMessage();
   const account = useAccount({
@@ -81,6 +81,7 @@ export function useConnectWallet() {
           wallet: account.data.address!,
           signature,
         });
+        res.init ? router.push(ROUTES.PROFILE) : router.push(ROUTES.NEW_USER);
         setStep('FINISHED');
       },
       onError(e: any) {
