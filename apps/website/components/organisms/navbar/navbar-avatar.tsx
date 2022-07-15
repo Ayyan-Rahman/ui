@@ -1,4 +1,5 @@
 import setLanguage from 'next-translate/setLanguage';
+import { useRouter } from 'next/router';
 import { useCallback } from 'react';
 
 import { NestedMenuItem } from 'mui-nested-menu';
@@ -15,6 +16,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
+import { ROUTES } from '../../../constants/routes';
 import { useAuth } from '../../../providers/auth';
 import { SessionUser } from '../../../types/user';
 
@@ -25,13 +27,7 @@ interface Props {
 /* TODO: Refactor */
 export function NavBarAvatar({ user }: Props) {
   const { element, isOpen, onClose, onOpen } = useMenu();
-  /*   const onChangeLanguage = useCallback(
-    (lang: string) => async () => {
-      await setLanguage(lang);
-      onClose();
-    },
-    [onClose]
-  ); */
+
   const withOnClose = useCallback(
     (cb: () => void) => () => {
       cb();
@@ -40,6 +36,7 @@ export function NavBarAvatar({ user }: Props) {
     [onClose]
   );
 
+  const router = useRouter();
   const { onSignOut } = useAuth();
 
   return (
@@ -97,7 +94,12 @@ export function NavBarAvatar({ user }: Props) {
             Portuguese (Brazil)
           </MenuItem>
         </NestedMenuItem> */}
-        <MenuItem key="disconnect" onClick={withOnClose(onSignOut)}>
+        <MenuItem
+          key="disconnect"
+          onClick={withOnClose(() => {
+            router.push(ROUTES.LANDING).then(() => onSignOut());
+          })}
+        >
           <Typography textAlign="center">Disconnect</Typography>
         </MenuItem>
       </Menu>

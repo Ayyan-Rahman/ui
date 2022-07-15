@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
+import { SessionUser } from 'apps/website/types/user';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useMutation, useQuery } from 'react-query';
 
@@ -11,6 +12,7 @@ import { useSnackbar } from '../../../../hooks/use-snackbar';
 import { useAuth } from '../../../../providers/auth';
 import { gqlMethods } from '../../../../services/api';
 import { Users } from '../../../../services/graphql/types.generated';
+import { queryClient } from '../../../../services/query-client';
 import { Form } from './form';
 import { schema, EditUserSchema, defaultValues } from './schema';
 
@@ -61,6 +63,18 @@ export function EditProfileTemplate() {
     'updateProfile',
     me && gqlMethods(me).update_user_profile,
     {
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries('me');
+
+        // Add optimistic todo to todos list
+        queryClient.setQueryData<SessionUser>('me', (old) => ({
+          ...old,
+          ...variables,
+        }));
+
+        // Return context with the optimistic todo
+        return { variables };
+      },
       onSuccess() {
         snackbar.handleClick({ message: 'Profile updated!' });
         router.push(ROUTES.PROFILE);
@@ -148,7 +162,7 @@ export function EditProfileTemplate() {
         <Form
           onSubmit={onSubmit}
           userData={me}
-          isLoading={updateMutation.isLoading}
+          isLoading={updateMutation.isLoading || imageUploadMutation.isLoading}
         />
       </FormProvider>
       <div style={{ height: '20vh' }}></div>

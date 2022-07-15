@@ -118,7 +118,11 @@ export function Form({ userData, isLoading, onSubmit }: Props) {
           >
             Cancel
           </Button>
-          <Button variant="contained" type="submit" disabled={isLoading}>
+          <Button
+            variant="contained"
+            type="submit"
+            disabled={isLoading || Object.keys(errors).length > 0}
+          >
             {isLoading ? (
               <CircularProgress color="inherit" size={24} />
             ) : (

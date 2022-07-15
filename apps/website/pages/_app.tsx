@@ -17,6 +17,8 @@ import { AuthProvider } from '../providers/auth';
 import { queryClient } from '../services/query-client';
 import { web3client } from '../services/web3/client';
 
+import NextNProgress from 'nextjs-progressbar';
+
 type AppProps = NextAppProps & {
   Component: NextAppProps['Component'] & { auth?: boolean };
 };
@@ -37,6 +39,7 @@ function CustomApp({ Component, pageProps: { ...pageProps } }: AppProps) {
             <Hydrate state={pageProps.dehydratedState}>
               <AuthProvider isAuthPage={Component.auth}>
                 <NavStateProvider>
+                  <NextNProgress color="#9A53FF" />
                   <Component {...pageProps} />
                 </NavStateProvider>
               </AuthProvider>
