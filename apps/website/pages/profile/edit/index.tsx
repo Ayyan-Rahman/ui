@@ -13,4 +13,6 @@ const EditProfile = () => {
   return <EditProfileTemplate />;
 };
 
+EditProfile.auth = true;
+
 export default EditProfile;

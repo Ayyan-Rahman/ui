@@ -77,28 +77,23 @@ export function EarnCredentialTemplate({ credential, user }) {
     'completeCredential',
     me && gqlMethods(me).complete_credential,
     {
-      onMutate: async (variables) => {
+      onSuccess: async (data) => {
         await queryClient.cancelQueries('me');
 
         // Add optimistic todo to todos list
         queryClient.setQueryData<SessionUser>('me', (old) => ({
           ...old,
-          credentials: old.credentials.map((obj) => {
-            if (obj.id == variables.id) {
-              return {
-                ...obj,
-                status: 'pending',
-              };
-            }
-
-            return obj;
-          }),
+          claimable_credentials: old.claimable_credentials.filter(
+            (obj) => obj.id !== data.update_credentials_by_pk.group_id
+          ),
+          credentials: [
+            ...old.credentials.filter(
+              (obj) => obj.id !== data.update_credentials_by_pk.id
+            ),
+            data.update_credentials_by_pk,
+          ],
         }));
 
-        // Return context with the optimistic todo
-        return { variables };
-      },
-      onSuccess() {
         handleOpen();
       },
     }

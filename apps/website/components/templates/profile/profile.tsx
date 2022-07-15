@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { BsFillPencilFill } from 'react-icons/bs';
 import { FaDiscord, FaTwitter, FaGithub } from 'react-icons/fa';
@@ -17,6 +17,7 @@ import {
   Divider,
   Snackbar,
   Alert,
+  Chip,
 } from '@mui/material';
 
 import { ROUTES } from '../../../constants/routes';
@@ -27,7 +28,9 @@ import { gqlMethods } from '../../../services/api';
 import { Credentials, Users } from '../../../services/graphql/types.generated';
 import { queryClient } from '../../../services/query-client';
 import { SessionUser } from '../../../types/user';
-import CredentialCard from '../../molecules/credential-card';
+import CredentialCard, {
+  CredentialCategories,
+} from '../../molecules/credential-card';
 import { NavBarAvatar } from '../../organisms/navbar/navbar-avatar';
 import PocModalMinted from '../../organisms/poc-modal-minted/poc-modal-minted';
 
@@ -36,6 +39,7 @@ export function ProfileTemplate() {
   const [credential, setCredential] =
     useState<PartialObjectDeep<Credentials> | null>(null);
   const [polygonURL, setPolygonURL] = useState<string | null>(null);
+  const [skills, setSkills] = useState<Record<string, string>>({});
 
   const { me } = useAuth();
 
@@ -106,9 +110,7 @@ export function ProfileTemplate() {
 
     console.log(`IPFS hash: ${ipfs}`);
 
-    // const { isMinted, polygonURL } = await mint(`ipfs://${ipfs}`);
-
-    const isMinted = true;
+    const { isMinted, polygonURL } = await mint(`ipfs://${ipfs}`);
 
     isMinted &&
       mintCredentialMutation.mutate(
@@ -126,8 +128,8 @@ export function ProfileTemplate() {
     me && gqlMethods(me).claim_credential
   );
 
-  const claimAndGoToEarn = (credentialGroupId) => {
-    updateMutation.mutate(
+  const claimAndGoToEarn = async (credentialGroupId) => {
+    await updateMutation.mutateAsync(
       {
         group_id: credentialGroupId,
       },
@@ -142,6 +144,18 @@ export function ProfileTemplate() {
 
   const goToEarn = (credentialId) =>
     router.push(ROUTES.CREDENTIALS_EARN + credentialId);
+
+  useEffect(() => {
+    if (me.credentials.length > 0) {
+      const counts = {};
+      me.credentials
+        .map((cred) => cred.categories)
+        .forEach((x) => {
+          counts[x] = (counts[x] || 0) + 1;
+        });
+      setSkills(counts);
+    }
+  }, [me?.credentials]);
 
   return (
     <>
@@ -278,7 +292,7 @@ export function ProfileTemplate() {
                 >
                   Proof of Credentials
                 </h2>
-                {/*isAdmin && (
+                {me?.is_poc_whitelisted && (
                   <Button
                     variant="contained"
                     size="small"
@@ -286,7 +300,7 @@ export function ProfileTemplate() {
                   >
                     Create a Credential
                   </Button>
-                )*/}
+                )}
               </Box>
               {/* Credentials earned */}
               <Grid container rowGap={2}>
@@ -332,7 +346,13 @@ export function ProfileTemplate() {
                 ))}
               </Grid>
               {/* Credentials created */}
-              <Grid container rowGap={2}>
+              <Grid
+                container
+                rowGap={2}
+                sx={{
+                  marginTop: (theme) => theme.spacing(7),
+                }}
+              >
                 <Box sx={{ width: '100%' }}>
                   {!!me.credential_groups.length && (
                     <h4>Credentials Created</h4>
@@ -355,42 +375,36 @@ export function ProfileTemplate() {
               </Grid>
             </section>
           </Grid>
-          {/*
           <Grid item className="right" xs={4} sx={{ padding: '0 65px' }}>
-            <section>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  marginTop: '51px',
-                }}
-              >
-                <h2 style={{ marginRight: '15px', fontSize: '20px' }}>
-                  Skills
-                </h2>
-                <Avatar
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => router.push('/profile/edit/skills')}
+            {me.credentials.length > 0 && (
+              <section>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    marginTop: '51px',
+                  }}
                 >
-                  <BsFillPencilFill />
-                </Avatar>
-              </Box>
-              <div>
-                {user.skills?.map((skill, index) => {
-                  return (
-                    <Button
-                      key={index}
-                      variant="contained"
-                      color="secondary"
-                      size="small"
-                      sx={{ margin: '5px' }}
-                    >
-                      {skill}
-                    </Button>
-                  );
-                })}
-              </div>
-            </section>
+                  <h2 style={{ marginRight: '15px', fontSize: '20px' }}>
+                    Skills
+                  </h2>
+                </Box>
+                <div>
+                  {Object.keys(skills).map((skill, idx) => (
+                    <Chip
+                      avatar={<Avatar>{skills[skill]}</Avatar>}
+                      key={'skill-' + (idx + 1)}
+                      label={CredentialCategories[skill]}
+                      size="medium"
+                      sx={{
+                        marginRight: (theme) => theme.spacing(1),
+                      }}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+            {/*
             <section>
               <Box
                 sx={{
@@ -459,8 +473,8 @@ export function ProfileTemplate() {
                 })}
               </div>
             </section>
-          </Grid>
           */}
+          </Grid>
         </Grid>
 
         {/* To show messages from useMint */}

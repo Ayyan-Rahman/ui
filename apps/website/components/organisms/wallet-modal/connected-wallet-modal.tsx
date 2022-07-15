@@ -44,7 +44,7 @@ export function ConnectedWallet({
 
   useEffect(() => {
     if (step === 'FINISHED') {
-      onSuccess();
+      onSuccess && onSuccess();
     }
   }, [onSuccess, step]);
 

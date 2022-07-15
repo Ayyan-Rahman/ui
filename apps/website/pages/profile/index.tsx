@@ -19,3 +19,5 @@ export default function Profile() {
     </DashboardTemplate>
   );
 }
+
+Profile.auth = true;

@@ -19,29 +19,29 @@ interface CredentialCardProps {
   mintable?: boolean;
   isNFT?: boolean;
   view?: () => void;
-  claim?: () => void;
-  complete?: () => void;
-  mint?: () => void;
+  claim?: () => Promise<any>;
+  complete?: () => Promise<any>;
+  mint?: () => Promise<any>;
   sx?: SxProps;
 }
 
 export const CredentialCategories = {
-  'operations': 'Operations',
-  'marketing': 'Marketing',
-  'design': 'Design',
-  'developer': 'Developer',
-  'engineering': 'Engineering',
-  'governance': 'Governance',
-  'education': 'Education',
-  'community': 'Community',
-  'product': 'Product',
+  operations: 'Operations',
+  marketing: 'Marketing',
+  design: 'Design',
+  developer: 'Developer',
+  engineering: 'Engineering',
+  governance: 'Governance',
+  education: 'Education',
+  community: 'Community',
+  product: 'Product',
   'business-development': 'Business Development',
   'talent-hr': 'Talent/HR',
-  'treasury': 'Treasury',
-  'strategy': 'Strategy',
-  'partnerships': 'Partnerships',
-  'legal': 'Legal',
-}
+  treasury: 'Treasury',
+  strategy: 'Strategy',
+  partnerships: 'Partnerships',
+  legal: 'Legal',
+};
 
 export default function CredentialCard({
   name,
@@ -60,13 +60,7 @@ export default function CredentialCard({
   mint,
   sx,
 }: CredentialCardProps) {
-  const [isMinting, setMinting] = useState<boolean>(false);
-
-  const handleMint = async () => {
-    setMinting(true);
-    await mint();
-    setMinting(false);
-  };
+  const [isLoading, setLoading] = useState<boolean>(false);
 
   return (
     <Card
@@ -120,18 +114,34 @@ export default function CredentialCard({
           <Button
             variant="contained"
             sx={{ width: '100%' }}
-            onClick={() => claim()}
+            disabled={isLoading}
+            onClick={() => {
+              setLoading(true);
+              claim().then(() => setLoading(false));
+            }}
           >
-            Complete Credential
+            {isLoading ? (
+              <CircularProgress color="inherit" size={24} />
+            ) : (
+              'Complete Credential'
+            )}
           </Button>
         )}
         {to_complete && (
           <Button
             variant="contained"
             sx={{ width: '100%' }}
-            onClick={() => complete()}
+            disabled={isLoading}
+            onClick={() => {
+              setLoading(true);
+              complete().then(() => setLoading(false));
+            }}
           >
-            Complete Credential
+            {isLoading ? (
+              <CircularProgress color="inherit" size={24} />
+            ) : (
+              'Complete Credential'
+            )}
           </Button>
         )}
         {mintable && (
@@ -139,9 +149,13 @@ export default function CredentialCard({
             startIcon={<i className="fas fa-coins" />}
             variant="contained"
             sx={{ width: '100%' }}
-            onClick={() => handleMint()}
+            disabled={isLoading}
+            onClick={() => {
+              setLoading(true);
+              mint().then(() => setLoading(false));
+            }}
           >
-            {isMinting ? (
+            {isLoading ? (
               <CircularProgress color="inherit" size={24} />
             ) : (
               'Mint NFT'

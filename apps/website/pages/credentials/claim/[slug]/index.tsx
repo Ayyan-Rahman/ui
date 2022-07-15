@@ -10,11 +10,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import CredentialCard from '../../../../components/molecules/credential-card';
-import { WalletModal } from '../../../../components/organisms/wallet-modal/wallet-modal';
+import { useAuth } from '../../../../providers/auth';
 import { gqlAnonMethods } from '../../../../services/api';
 
 export default function Claim() {
-  const [isOpen, toggleOpen] = useToggle(false);
+  const { onOpenLogin } = useAuth();
+
   const [credential, setCredential] = useState({
     name: '',
     description: '',
@@ -109,13 +110,12 @@ export default function Claim() {
               alignItems: 'center',
             }}
           >
-            <Button variant="contained" onClick={toggleOpen}>
+            <Button variant="contained" onClick={onOpenLogin}>
               Claim credential
             </Button>
           </Box>
         </Box>
       </Box>
-      <WalletModal isOpen={isOpen} onClose={toggleOpen} />
     </div>
   );
 }
