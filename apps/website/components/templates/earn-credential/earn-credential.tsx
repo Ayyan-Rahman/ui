@@ -20,10 +20,13 @@ import {
   Typography,
   Divider,
   Button,
+  CircularProgress,
 } from '@mui/material';
 
 import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
+import { queryClient } from '../../../services/query-client';
+import { SessionUser } from '../../../types/user';
 import { NavBarAvatar } from '../../organisms/navbar/navbar-avatar';
 import PocModalCompleted from '../../organisms/poc-modal-completed/poc-modal-completed';
 import { AccomplishmentsForm } from './accomplishments-form';
@@ -74,6 +77,27 @@ export function EarnCredentialTemplate({ credential, user }) {
     'completeCredential',
     me && gqlMethods(me).complete_credential,
     {
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries('me');
+
+        // Add optimistic todo to todos list
+        queryClient.setQueryData<SessionUser>('me', (old) => ({
+          ...old,
+          credentials: old.credentials.map((obj) => {
+            if (obj.id == variables.id) {
+              return {
+                ...obj,
+                status: 'pending',
+              };
+            }
+
+            return obj;
+          }),
+        }));
+
+        // Return context with the optimistic todo
+        return { variables };
+      },
       onSuccess() {
         handleOpen();
       },
@@ -351,8 +375,13 @@ export function EarnCredentialTemplate({ credential, user }) {
                 variant="contained"
                 type="submit"
                 sx={{ marginLeft: '10px' }}
+                disabled={updateMutation.isLoading}
               >
-                Submit
+                {updateMutation.isLoading ? (
+                  <CircularProgress color="inherit" size={24} />
+                ) : (
+                  'Submit'
+                )}
               </Button>
             </Box>
           </Stack>

@@ -25,6 +25,8 @@ import { usePinata } from '../../../hooks/usePinata';
 import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import { Credentials, Users } from '../../../services/graphql/types.generated';
+import { queryClient } from '../../../services/query-client';
+import { SessionUser } from '../../../types/user';
 import CredentialCard from '../../molecules/credential-card';
 import { NavBarAvatar } from '../../organisms/navbar/navbar-avatar';
 import PocModalMinted from '../../organisms/poc-modal-minted/poc-modal-minted';
@@ -54,7 +56,30 @@ export function ProfileTemplate() {
 
   const mintCredentialMutation = useMutation(
     'mintCredential',
-    me && gqlMethods(me).mint_credential
+    me && gqlMethods(me).mint_credential,
+    {
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries('me');
+
+        // Add optimistic todo to todos list
+        queryClient.setQueryData<SessionUser>('me', (old) => ({
+          ...old,
+          credentials: old.credentials.map((obj) => {
+            if (obj.id == variables.id) {
+              return {
+                ...obj,
+                status: 'minted',
+              };
+            }
+
+            return obj;
+          }),
+        }));
+
+        // Return context with the optimistic todo
+        return { variables };
+      },
+    }
   );
 
   const { mint, loading, minted, snackbar } = useBiconomyMint(
@@ -77,13 +102,13 @@ export function ProfileTemplate() {
       details: credential.details,
     };
 
-    console.log('Obj', obj);
-
     const ipfs = await uploadMetadataToIPFS(obj);
 
     console.log(`IPFS hash: ${ipfs}`);
 
-    const { isMinted, polygonURL } = await mint(`ipfs://${ipfs}`);
+    // const { isMinted, polygonURL } = await mint(`ipfs://${ipfs}`);
+
+    const isMinted = true;
 
     isMinted &&
       mintCredentialMutation.mutate(
@@ -210,7 +235,7 @@ export function ProfileTemplate() {
                 fontSize: '34px',
               }}
             >
-              {me.name}
+              {me?.name}
             </h1>
             <Avatar
               sx={{ cursor: 'pointer' }}
@@ -220,8 +245,8 @@ export function ProfileTemplate() {
             </Avatar>
           </Box>
           {/* <p style={{ margin: '0 auto' }}>{tmpUser.bio}</p> */}
-          {me.username && (
-            <p style={{ marginTop: '0', fontSize: 'small' }}>@{me.username}</p>
+          {me?.username && (
+            <p style={{ marginTop: '0', fontSize: 'small' }}>@{me?.username}</p>
           )}
         </Box>
         <Divider light sx={{ width: '100%' }} />
