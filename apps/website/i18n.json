@@ -2,7 +2,7 @@
   "locales": ["en", "pt"],
   "defaultLocale": "en",
   "pages": {
-    "*": ["common", "index"],
+    "*": ["common", "index", "auth"],
     "/explore": ["explore"],
     "/new-user": ["dashboard-new-user"],
     "/dao/[id]": ["dao-profile"],
