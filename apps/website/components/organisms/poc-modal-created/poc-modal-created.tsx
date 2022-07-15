@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
@@ -14,6 +13,7 @@ import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 
 import { useSnackbar } from '../../../hooks/use-snackbar';
+import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import CredentialCard from '../../molecules/credential-card';
 
@@ -54,15 +54,15 @@ export default function PocModalCreated({
   });
   const [url, setURL] = useState<string | null>(null);
 
-  const session = useSession();
+  const { me } = useAuth();
   const router = useRouter();
   const snackbar = useSnackbar();
 
   const { refetch: getCredentialGroup } = useQuery(
     ['get-credential-group'],
     () => {
-      if (!session.data.user) return;
-      return gqlMethods(session.data.user).get_credential_group_info({
+      if (!me) return;
+      return gqlMethods(me).get_credential_group_info({
         credentialId: credentialGroupId,
       });
     },

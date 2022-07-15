@@ -1,14 +1,16 @@
-import { useSession } from 'next-auth/react';
+/* eslint-disable @next/next/no-img-element */
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
+import normalizeUrl from 'normalize-url';
 import { FaDiscord } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 
 import { TOKENS } from '@gateway/theme';
 import { useMenu } from '@gateway/ui';
 
+import { LinkOutlined } from '@mui/icons-material';
 import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
 import ArticleIcon from '@mui/icons-material/Article';
 import EmailIcon from '@mui/icons-material/Email';
@@ -39,11 +41,10 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 
 import { ROUTES } from '../../../constants/routes';
+import { useAuth } from '../../../providers/auth';
 import { gqlAnonMethods, gqlMethods } from '../../../services/api';
-import HoldersModal from '../../organisms/holders-modal/holders-modal';
-import normalizeUrl from 'normalize-url';
-import { LinkOutlined } from '@mui/icons-material';
 import { CredentialCategories } from '../../molecules/credential-card';
+import HoldersModal from '../../organisms/holders-modal/holders-modal';
 
 const DetailsFieldset = ({ children }) => (
   <fieldset
@@ -60,7 +61,7 @@ const DetailsFieldset = ({ children }) => (
 
 export function ViewCredentialTemplate({ credential }) {
   const { element, isOpen, onClose, onOpen } = useMenu();
-  const session = useSession();
+  const { me } = useAuth();
   const router = useRouter();
 
   const [holders, setHolders] = useState([]);
@@ -68,7 +69,7 @@ export function ViewCredentialTemplate({ credential }) {
   const showHolders = () => setOpen(true);
   const hideHolders = () => setOpen(false);
 
-  const isIssuer = credential.issuer.id === session.data?.user.id;
+  const isIssuer = credential.issuer.id === me?.id;
   const details = credential.details;
   const accomplishments = credential.pow;
   const credentialImgUrl = credential.image;
@@ -204,7 +205,7 @@ export function ViewCredentialTemplate({ credential }) {
           </MenuItem>
         </Menu>*/}
 
-        {session.data?.user && (
+        {me && (
           <Button
             variant="outlined"
             onClick={() => router.push(ROUTES.PROFILE)}
@@ -263,7 +264,11 @@ export function ViewCredentialTemplate({ credential }) {
                 height={389}
                 width={389}
                 alt="credential image"
-                style={{ borderRadius: '5px', objectFit: 'cover', objectPosition: 'center' }}
+                style={{
+                  borderRadius: '5px',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
               />
               <Box
                 sx={{
@@ -280,7 +285,13 @@ export function ViewCredentialTemplate({ credential }) {
                 >
                   {credential.name}
                 </Typography>
-                {credential.categories.map((category) => (<Chip label={CredentialCategories[category]} sx={{ marginBottom: '20px' }} />))}
+                {credential.categories.map((category, idx) => (
+                  <Chip
+                    key={'category-' + (idx + 1)}
+                    label={CredentialCategories[category]}
+                    sx={{ marginBottom: '20px' }}
+                  />
+                ))}
                 <Box>
                   <Typography variant="caption" sx={{ fontSize: '16px' }}>
                     {credential.description}
@@ -507,9 +518,13 @@ export function ViewCredentialTemplate({ credential }) {
               <Grid item md={7}>
                 {accomplishments &&
                   accomplishments.map((accomplishment, index) => (
-                    <Stack flexDirection="row" key={'accomplishment-' + index} sx={{
-                      marginBottom: 6
-                    }}>
+                    <Stack
+                      flexDirection="row"
+                      key={'accomplishment-' + index}
+                      sx={{
+                        marginBottom: 6,
+                      }}
+                    >
                       <Avatar
                         sx={{
                           marginRight: 4,
@@ -555,11 +570,15 @@ export function ViewCredentialTemplate({ credential }) {
                                     primary={pow.pow_description}
                                     secondary={
                                       <Link
-                                        href={normalizeUrl(pow.pow_link, { defaultProtocol: "https:" })}
+                                        href={normalizeUrl(pow.pow_link, {
+                                          defaultProtocol: 'https:',
+                                        })}
                                         variant="body1"
                                         target="_blank"
                                       >
-                                        {normalizeUrl(pow.pow_link, { defaultProtocol: "https:" })}
+                                        {normalizeUrl(pow.pow_link, {
+                                          defaultProtocol: 'https:',
+                                        })}
                                       </Link>
                                     }
                                     sx={{
@@ -577,9 +596,10 @@ export function ViewCredentialTemplate({ credential }) {
               </Grid>
             </Grid>
           )}
-        {(session.data?.user && (credential.status === 'to_complete' ||
-          credential.status === undefined) &&
-          !isIssuer) && (
+        {me &&
+          (credential.status === 'to_complete' ||
+            credential.status === undefined) &&
+          !isIssuer && (
             <Button
               variant="contained"
               sx={{ margin: 'auto' }}

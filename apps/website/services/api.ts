@@ -5,9 +5,7 @@ import { getSdk } from './graphql/types.generated';
 
 export const glqAnonClient = new GraphQLClient(
   process.env.NEXT_PUBLIC_HASURA_ENDPOINT,
-  {
-    headers: {},
-  }
+  {}
 );
 
 /* While we don't have authentication on place */
@@ -24,3 +22,5 @@ export const gqlAnonMethods = getSdk(glqAnonClient);
 
 export const gqlMethods = (user: Partial<SessionUser>) =>
   getSdk(gqlClient(user));
+
+export type GqlMethods = ReturnType<typeof getSdk>;

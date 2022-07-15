@@ -1,17 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useSession } from 'next-auth/react';
-import NextLink from 'next/link';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { AnimatePresence } from 'framer-motion';
-import { useConnect } from 'wagmi';
+import { useConnect, useDisconnect } from 'wagmi';
 
 import { Check, Close } from '@mui/icons-material';
 import {
   Box,
   Button,
-  Link,
   CircularProgress,
   DialogActions,
   DialogContent,
@@ -19,33 +15,51 @@ import {
   DialogTitle,
 } from '@mui/material';
 
-import { ROUTES } from '../../../../constants/routes';
 import { AnimatedMessage } from './animated-message';
 import { useConnectWallet } from './state';
 
 type Props = {
+  isError: boolean;
+  onError: () => void;
   onBack: () => void;
+  onSuccess: () => void;
 };
 
 /* TODO: Move this out from here, move to page level */
 
-export function ConnectedWallet({ onBack }: Props) {
+export function ConnectedWallet({
+  isError,
+  onError,
+  onBack,
+  onSuccess,
+}: Props) {
   const { activeConnector } = useConnect();
-  const { data: session } = useSession();
-  const router = useRouter();
-
+  const { disconnectAsync } = useDisconnect();
   const { step, error, isLoading } = useConnectWallet();
+
+  const onRetry = async () => {
+    await disconnectAsync();
+    onBack();
+  };
 
   useEffect(() => {
     if (step === 'FINISHED') {
-      router.push(!session?.user?.init ? ROUTES.NEW_USER : ROUTES.PROFILE);
+      onSuccess();
     }
-  }, [router, session?.user?.init, step]);
+  }, [onSuccess, step]);
+
+  useEffect(() => {
+    if (error && !isError) {
+      onError();
+    }
+  }, [error, isError, onError]);
+
+  if (!activeConnector?.name) return null;
 
   return (
     <Box>
       <DialogTitle sx={{ textAlign: 'center' }}>
-        Connecting using {activeConnector.name}
+        Connecting using {activeConnector?.name}
       </DialogTitle>
       <Box
         sx={{
@@ -101,16 +115,8 @@ export function ConnectedWallet({ onBack }: Props) {
               sx={{ whiteSpace: 'pre-wrap', textAlign: 'center' }}
             >
               Success
-              <br />
-              now you're entering{' '}
-              <NextLink
-                passHref
-                href={!session?.user?.init ? ROUTES.NEW_USER : ROUTES.PROFILE}
-              >
-                <Link color="primary">the Gateway</Link>
-              </NextLink>
-              <br />
             </DialogContentText>
+            <Button onClick={onSuccess}>Close</Button>
           </DialogContent>
         </>
       )}
@@ -122,7 +128,7 @@ export function ConnectedWallet({ onBack }: Props) {
           <DialogActions>
             <Button
               variant="contained"
-              onClick={error.onClick ?? onBack}
+              onClick={onRetry}
               fullWidth
               size="small"
             >

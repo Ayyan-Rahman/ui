@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -11,6 +10,7 @@ import { TOKENS } from '@gateway/theme';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { usePinata } from '../../../hooks/usePinata';
+import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import PocModalCreated from '../../organisms/poc-modal-created/poc-modal-created';
 import { AvatarUploadCard } from './avatar-upload-card';
@@ -32,12 +32,12 @@ export function NewCredentialTemplate() {
     },
   });
 
-  const session = useSession();
+  const { me } = useAuth();
   const { uploadFileToIPFS } = usePinata();
 
   const updateMutation = useMutation(
     'updateCredential',
-    session.data?.user && gqlMethods(session.data.user).create_credential_group
+    me && gqlMethods(me).create_credential_group
   );
 
   const validateWallets = async (wallets: string[]): Promise<boolean> => {

@@ -1,12 +1,14 @@
-import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import { useMutation } from 'react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 
-import { gqlAnonMethods } from '../../../../services/api';
+import { ROUTES } from '../../../constants/routes';
+import { useLogin } from '../../../providers/auth/hooks';
+import { gqlAnonMethods } from '../../../services/api';
 
-type Step =
+export type Step =
   | 'GET_ACCOUNT'
   | 'GET_NONCE'
   | 'GET_SIGNATURE'
@@ -22,12 +24,19 @@ export function useConnectWallet() {
     message: any;
     label: string;
     // eslint-disable-next-line @typescript-eslint/ban-types
-    onClick?: () => any;
   }>();
+  const router = useRouter();
+
+  const signIn = useLogin(() => router.push(ROUTES.PROFILE));
 
   const sign = useSignMessage();
   const account = useAccount({
-    onSuccess({ address }) {
+    onSuccess(data) {
+      if (!data) {
+        throw new Error('Reconnect to Wallet');
+      }
+      const { address } = data ?? {};
+
       setStep('GET_NONCE');
       nonce.mutate(address);
     },
@@ -66,12 +75,13 @@ export function useConnectWallet() {
         message: `Welcome to Gateway!\n\nPlease sign this message for access: ${nonce}`,
       }),
     {
-      onSuccess(signature) {
+      async onSuccess(signature) {
         setStep('GET_TOKEN');
-        login.mutate({
+        const res = await signIn.mutateAsync({
           wallet: account.data.address!,
           signature,
         });
+        setStep('FINISHED');
       },
       onError(e: any) {
         setError({
@@ -83,39 +93,12 @@ export function useConnectWallet() {
     }
   );
 
-  /* Handle login session authentication */
-  const login = useMutation(
-    [account.data?.address, nonce.data?.get_nonce?.nonce, 'signature'],
-    async ({ wallet, signature }: { wallet: string; signature: string }) => {
-      const res = await signIn('credentials', {
-        redirect: false,
-        wallet,
-        signature,
-      });
-      if (res.error) throw res.error;
-      return res;
-    },
-    {
-      async onSuccess(data) {
-        console.log('Login success', data);
-        setStep('FINISHED');
-      },
-      onError(e) {
-        console.error('Login error', e);
-        setError({
-          label: 'Try again',
-          message: (e as any)?.response?.errors?.[0]?.message,
-        });
-      },
-    }
-  );
-
   const onReset = () => {
     setStep('GET_NONCE');
     setError(undefined);
     nonce.reset();
     sign.reset();
-    login.reset();
+    signIn.reset();
   };
 
   return {

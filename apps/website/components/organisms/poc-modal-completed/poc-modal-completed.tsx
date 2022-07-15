@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
@@ -12,6 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 
+import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import CredentialCard from '../../molecules/credential-card';
 
@@ -24,21 +24,21 @@ const style: SxProps = {
 };
 
 export default function PocModalCompleted({ credentialId, open, handleClose }) {
-  const session = useSession();
   const router = useRouter();
+  const { me } = useAuth();
 
   const [credential, setCredential] = useState({
     name: '',
     description: '',
     image: '',
-    categories: []
+    categories: [],
   });
 
   const { refetch: getCredential } = useQuery(
     ['get-credential'],
     () => {
-      if (!session.data.user) return;
-      return gqlMethods(session.data.user).get_credential({
+      if (!me) return;
+      return gqlMethods(me).get_credential({
         credential_id: credentialId,
       });
     },
@@ -70,7 +70,7 @@ export default function PocModalCompleted({ credentialId, open, handleClose }) {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         sx={{
-          overflowY: 'auto'
+          overflowY: 'auto',
         }}
       >
         <Box sx={style}>

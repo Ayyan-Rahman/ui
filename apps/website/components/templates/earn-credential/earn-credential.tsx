@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -23,6 +22,7 @@ import {
   Button,
 } from '@mui/material';
 
+import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import { NavBarAvatar } from '../../organisms/navbar/navbar-avatar';
 import PocModalCompleted from '../../organisms/poc-modal-completed/poc-modal-completed';
@@ -30,7 +30,7 @@ import { AccomplishmentsForm } from './accomplishments-form';
 import { CredentialDetailsForm } from './credential-details-form';
 
 export function EarnCredentialTemplate({ credential, user }) {
-  const session = useSession();
+  const { me } = useAuth();
   const router = useRouter();
 
   const [open, setOpen] = useState<boolean>(false);
@@ -72,7 +72,7 @@ export function EarnCredentialTemplate({ credential, user }) {
 
   const updateMutation = useMutation(
     'completeCredential',
-    session.data?.user && gqlMethods(session.data.user).complete_credential,
+    me && gqlMethods(me).complete_credential,
     {
       onSuccess() {
         handleOpen();

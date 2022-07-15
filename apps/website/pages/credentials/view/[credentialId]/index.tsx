@@ -1,9 +1,9 @@
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 
 import { useQuery } from 'react-query';
 
 import { ViewCredentialTemplate } from '../../../../components/templates/view-credential';
+import { useAuth } from '../../../../providers/auth';
 import { gqlAnonMethods, gqlMethods } from '../../../../services/api';
 
 interface CredentialInfoProps {
@@ -34,7 +34,7 @@ interface CredentialInfoProps {
 
 export default function ViewCredential() {
   const router = useRouter();
-  const session = useSession();
+  const { me } = useAuth();
 
   const { credentialId } = router.query;
 
@@ -59,7 +59,9 @@ export default function ViewCredential() {
           group_id: credentialInfo.group_id || credentialInfo.id,
           image: credentialInfo.image,
           details: credentialInfo?.details,
-          categories: credentialInfo?.categories ? credentialInfo?.categories : [credentialInfo?.category],
+          categories: credentialInfo?.categories
+            ? credentialInfo?.categories
+            : [credentialInfo?.category],
           pow: credentialInfo?.pow,
           issuer: {
             id: credentialInfo?.admin?.id || credentialInfo?.issuer?.id,

@@ -1,9 +1,9 @@
 import { object, string, SchemaOf } from 'yup';
 
-import { Users } from '../../../../services/graphql/types.generated';
+import { SessionUser } from '../../../../types/user';
 
 export type EditUserSchema = Pick<
-  Users,
+  SessionUser,
   'name' | 'username' | 'about' | 'email_address' | 'pfp'
 >;
 
@@ -23,7 +23,7 @@ export const defaultValues = ({
   email_address,
   pfp,
 }: //discord_id,
-Partial<Users>): EditUserSchema => ({
+Partial<SessionUser>): EditUserSchema => ({
   name,
   username,
   about,

@@ -25,10 +25,11 @@ import {
 } from '@mui/material';
 
 import { Users } from '../../../../services/graphql/types.generated';
+import { SessionUser } from '../../../../types/user';
 import { EditUserSchema } from './schema';
 
 type Props = {
-  userData: Partial<Users>;
+  userData: Partial<SessionUser>;
   isLoading: boolean;
   onSubmit: (data: EditUserSchema) => void;
 };

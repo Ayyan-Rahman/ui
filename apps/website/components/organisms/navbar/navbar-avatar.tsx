@@ -16,10 +16,10 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { useAuth } from '../../../providers/auth';
-import { Users } from '../../../services/graphql/types.generated';
+import { SessionUser } from '../../../types/user';
 
 interface Props {
-  user?: Partial<Users>;
+  user?: SessionUser;
 }
 
 /* TODO: Refactor */

@@ -1,0 +1,45 @@
+query me {
+  me {
+    ...current_user
+
+    following {
+      user_id
+    }
+
+    following_dao {
+      dao_id
+      dao {
+        id
+        logo_url
+        name
+      }
+    }
+
+    credentials {
+      id
+      name
+      description
+      image
+      status
+      issuer_id
+      details
+      categories
+    }
+
+    credential_groups {
+      id
+      name
+      description
+      image
+      category
+    }
+
+    claimable_credentials {
+      id
+      name
+      description
+      image
+      category
+    }
+  }
+}

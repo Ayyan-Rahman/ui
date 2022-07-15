@@ -1,5 +1,6 @@
-import { useSession } from 'next-auth/react';
+import useTranslation from 'next-translate/useTranslation';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -7,25 +8,21 @@ import { useMutation, useQuery } from 'react-query';
 
 import { ROUTES } from '../../../../constants/routes';
 import { useSnackbar } from '../../../../hooks/use-snackbar';
+import { useAuth } from '../../../../providers/auth';
 import { gqlMethods } from '../../../../services/api';
 import { Users } from '../../../../services/graphql/types.generated';
 import { Form } from './form';
 import { schema, EditUserSchema, defaultValues } from './schema';
-import useTranslation from 'next-translate/useTranslation';
-import { useEffect } from 'react';
 
-type Props = {
-  user: Partial<Users>;
-};
+export function EditProfileTemplate() {
+  const { me } = useAuth();
 
-export function EditProfileTemplate({ user }: Props) {
   const methods = useForm<EditUserSchema>({
     resolver: yupResolver(schema),
-    defaultValues: defaultValues(user),
+    defaultValues: defaultValues(me),
   });
 
   const router = useRouter();
-  const session = useSession();
   const snackbar = useSnackbar();
 
   const { t } = useTranslation('user-profile');
@@ -47,8 +44,8 @@ export function EditProfileTemplate({ user }: Props) {
 
       !!username && or.push({ username: { _eq: username } });
 
-      return session.data?.user
-        ? gqlMethods(session.data.user).Users({
+      return me
+        ? gqlMethods(me).Users({
             where: {
               _or: or,
             },
@@ -62,7 +59,7 @@ export function EditProfileTemplate({ user }: Props) {
 
   const updateMutation = useMutation(
     'updateProfile',
-    session.data?.user && gqlMethods(session.data.user).update_user_profile,
+    me && gqlMethods(me).update_user_profile,
     {
       onSuccess() {
         snackbar.handleClick({ message: 'Profile updated!' });
@@ -73,17 +70,17 @@ export function EditProfileTemplate({ user }: Props) {
 
   const imageUploadMutation = useMutation(
     'uploadImage',
-    session.data?.user && gqlMethods(session.data.user).upload_image
+    me && gqlMethods(me).upload_image
   );
 
   const validate = () => {
     if (!isLoading && validateData?.users?.length) {
       const emails = validateData.users
         .map((user) => user.email_address)
-        .filter((email) => email !== user.email_address);
+        .filter((email) => email !== me.email_address);
       const usernames = validateData.users
         .map((user) => user.username)
-        .filter((username) => username !== user.username);
+        .filter((username) => username !== me.username);
 
       if (emails.includes(email_address)) {
         methods.setError('email_address', {
@@ -116,7 +113,7 @@ export function EditProfileTemplate({ user }: Props) {
 
     let upload = null;
 
-    if (data.pfp !== user.pfp) {
+    if (data.pfp !== me.pfp) {
       upload = await imageUploadMutation.mutateAsync({
         base64: data.pfp,
         name: 'pfp image',
@@ -125,7 +122,7 @@ export function EditProfileTemplate({ user }: Props) {
 
     updateMutation.mutate(
       {
-        id: user.id,
+        id: me.id,
         ...data,
         ...(upload !== null && {
           pfp:
@@ -138,7 +135,7 @@ export function EditProfileTemplate({ user }: Props) {
         onSuccess: () => router.push('/profile'),
         onError: () => {
           validate();
-        }
+        },
       }
     );
   };
@@ -150,7 +147,7 @@ export function EditProfileTemplate({ user }: Props) {
       <FormProvider {...methods}>
         <Form
           onSubmit={onSubmit}
-          userData={user}
+          userData={me}
           isLoading={updateMutation.isLoading}
         />
       </FormProvider>

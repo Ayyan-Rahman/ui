@@ -10,7 +10,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import CredentialCard from '../../../../components/molecules/credential-card';
-import { WalletModal } from '../../../../components/templates/landing/wallet-modal/wallet-modal';
+import { WalletModal } from '../../../../components/organisms/wallet-modal/wallet-modal';
 import { gqlAnonMethods } from '../../../../services/api';
 
 export default function Claim() {
@@ -19,7 +19,7 @@ export default function Claim() {
     name: '',
     description: '',
     image: '',
-    categories: []
+    categories: [],
   });
 
   const router = useRouter();
@@ -28,7 +28,9 @@ export default function Claim() {
   useQuery(
     ['get-credential-group-by-slug'],
     () => {
-      return gqlAnonMethods.get_credential_group_info_by_slug({ slug: slug as string });
+      return gqlAnonMethods.get_credential_group_info_by_slug({
+        slug: slug as string,
+      });
     },
     {
       onSuccess: (data) =>
@@ -43,12 +45,14 @@ export default function Claim() {
 
   return (
     <div>
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        p: 3
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          p: 3,
+        }}
+      >
         <Box>
           <Image
             src="/favicon-512.png"
@@ -63,7 +67,7 @@ export default function Claim() {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            flex: 1
+            flex: 1,
           }}
         >
           <Box>
@@ -74,7 +78,7 @@ export default function Claim() {
               fontSize={48}
               textAlign="center"
               sx={{
-                mb: 2
+                mb: 2,
               }}
             >
               Claim your credential now
@@ -95,7 +99,7 @@ export default function Claim() {
             image={credential.image}
             categories={credential.categories}
             sx={{
-              mb: 8
+              mb: 8,
             }}
           />
           <Box

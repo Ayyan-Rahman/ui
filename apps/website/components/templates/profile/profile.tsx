@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
@@ -6,6 +5,7 @@ import { BsFillPencilFill } from 'react-icons/bs';
 import { FaDiscord, FaTwitter, FaGithub } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
 import { useMutation } from 'react-query';
+import { PartialObjectDeep } from 'type-fest/source/partial-deep';
 
 import {
   Button,
@@ -22,30 +22,25 @@ import {
 import { ROUTES } from '../../../constants/routes';
 import { useBiconomyMint } from '../../../hooks/useMint';
 import { usePinata } from '../../../hooks/usePinata';
+import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import { Credentials, Users } from '../../../services/graphql/types.generated';
 import CredentialCard from '../../molecules/credential-card';
 import { NavBarAvatar } from '../../organisms/navbar/navbar-avatar';
 import PocModalMinted from '../../organisms/poc-modal-minted/poc-modal-minted';
 
-type Props = {
-  user: Partial<Users>;
-  isAdmin: boolean;
-  createdCredentials: Array<Partial<Credentials>>;
-  claimableCredentials: Array<Partial<Credentials>>;
-};
-
-export function ProfileTemplate({
-  user,
-  isAdmin,
-  createdCredentials,
-  claimableCredentials,
-}: Props) {
+export function ProfileTemplate() {
   const [open, setOpen] = useState<boolean>(false);
-  const [credential, setCredential] = useState<Credentials | null>(null);
+  const [credential, setCredential] =
+    useState<PartialObjectDeep<Credentials> | null>(null);
   const [polygonURL, setPolygonURL] = useState<string | null>(null);
 
-  const handleOpen = (credential: Credentials, polygonURL: string) => {
+  const { me } = useAuth();
+
+  const handleOpen = (
+    credential: PartialObjectDeep<Credentials>,
+    polygonURL: string
+  ) => {
     setCredential(credential);
     setPolygonURL(polygonURL);
     setOpen(true);
@@ -55,12 +50,11 @@ export function ProfileTemplate({
     setOpen(false);
   };
 
-  const session = useSession();
   const router = useRouter();
 
   const mintCredentialMutation = useMutation(
     'mintCredential',
-    session.data?.user && gqlMethods(session.data.user).mint_credential
+    me && gqlMethods(me).mint_credential
   );
 
   const { mint, loading, minted, snackbar } = useBiconomyMint(
@@ -73,13 +67,13 @@ export function ProfileTemplate({
    * It mints a credential.
    * @param {Credentials} credential - the credential to be referenced
    */
-  const mintNFT = async (credential: Credentials) => {
+  const mintNFT = async (credential: PartialObjectDeep<Credentials>) => {
     const obj = {
       name: credential.name,
       image: credential.image,
       description: credential.description,
       issuer_id: credential.issuer_id,
-      target_id: user.id,
+      target_id: me.id,
       details: credential.details,
     };
 
@@ -104,7 +98,7 @@ export function ProfileTemplate({
 
   const updateMutation = useMutation(
     'claimCredential',
-    session.data?.user && gqlMethods(session.data.user).claim_credential
+    me && gqlMethods(me).claim_credential
   );
 
   const claimAndGoToEarn = (credentialGroupId) => {
@@ -150,10 +144,10 @@ export function ProfileTemplate({
             cursor: 'pointer',
           }}
         >
-          <NavBarAvatar user={user} />
+          <NavBarAvatar user={me} />
         </Box>
         <Avatar
-          src={user.pfp.startsWith('http') ? user.pfp : '/images/logo.png'}
+          src={me?.pfp.startsWith('http') ? me?.pfp : '/images/logo.png'}
           sx={{
             width: 150,
             height: 150,
@@ -216,7 +210,7 @@ export function ProfileTemplate({
                 fontSize: '34px',
               }}
             >
-              {user.name}
+              {me.name}
             </h1>
             <Avatar
               sx={{ cursor: 'pointer' }}
@@ -226,10 +220,8 @@ export function ProfileTemplate({
             </Avatar>
           </Box>
           {/* <p style={{ margin: '0 auto' }}>{tmpUser.bio}</p> */}
-          {user.username && (
-            <p style={{ marginTop: '0', fontSize: 'small' }}>
-              @{user.username}
-            </p>
+          {me.username && (
+            <p style={{ marginTop: '0', fontSize: 'small' }}>@{me.username}</p>
           )}
         </Box>
         <Divider light sx={{ width: '100%' }} />
@@ -237,8 +229,8 @@ export function ProfileTemplate({
           <Grid item className="left" xs={8} sx={{ padding: '0 65px' }}>
             <section style={{ marginBottom: '20px' }}>
               <h2 style={{ margin: '20px 0', marginTop: '51px' }}>About</h2>
-              <div className="about">{user.about}</div>
-              {!user.about && (
+              <div className="about">{me.about}</div>
+              {!me.about && (
                 <Button
                   variant="outlined"
                   size="small"
@@ -261,7 +253,7 @@ export function ProfileTemplate({
                 >
                   Proof of Credentials
                 </h2>
-                {isAdmin && (
+                {/*isAdmin && (
                   <Button
                     variant="contained"
                     size="small"
@@ -269,21 +261,21 @@ export function ProfileTemplate({
                   >
                     Create a Credential
                   </Button>
-                )}
+                )*/}
               </Box>
               {/* Credentials earned */}
               <Grid container rowGap={2}>
                 <Box sx={{ width: '100%' }}>
-                  {(!!claimableCredentials.length ||
-                    !!user.credentials.length) && <h4>My Credentials</h4>}
+                  {(!!me.claimable_credentials.length ||
+                    !!me.credentials.length) && <h4>My Credentials</h4>}
                 </Box>
-                {claimableCredentials.map((credential) => (
+                {me.claimable_credentials.map((credential) => (
                   <Grid item xs={4} key={credential.id}>
                     <CredentialCard
                       name={credential.name}
                       description={credential.description}
                       image={credential.image}
-                      categories={credential.categories}
+                      categories={[credential.category]}
                       view={() =>
                         router.push(ROUTES.CREDENTIALS_VIEW + credential.id)
                       }
@@ -293,7 +285,7 @@ export function ProfileTemplate({
                     />
                   </Grid>
                 ))}
-                {user.credentials.map((credential) => (
+                {me.credentials.map((credential) => (
                   <Grid item xs={4} key={credential.id}>
                     <CredentialCard
                       name={credential.name}
@@ -317,15 +309,17 @@ export function ProfileTemplate({
               {/* Credentials created */}
               <Grid container rowGap={2}>
                 <Box sx={{ width: '100%' }}>
-                  {!!createdCredentials.length && <h4>Credentials Created</h4>}
+                  {!!me.credential_groups.length && (
+                    <h4>Credentials Created</h4>
+                  )}
                 </Box>
-                {createdCredentials.map((credential) => (
+                {me.credential_groups.map((credential) => (
                   <Grid item xs={4} key={credential.id}>
                     <CredentialCard
                       name={credential.name}
                       description={credential.description}
                       image={credential.image}
-                      categories={credential.categories}
+                      categories={[credential.category]}
                       smaller
                       view={() =>
                         router.push(ROUTES.CREDENTIALS_VIEW + credential.id)

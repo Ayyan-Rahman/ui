@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import useTranslation from 'next-translate/useTranslation';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -11,6 +10,7 @@ import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 
 import { ROUTES } from '../../../constants/routes';
 import { useSnackbar } from '../../../hooks/use-snackbar';
+import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
 import { Users } from '../../../services/graphql/types.generated';
 import { AvatarUploadCard } from './avatar-upload-card';
@@ -34,7 +34,7 @@ export function NewUserTemplate({ user }: Props) {
   const snackbar = useSnackbar();
 
   const router = useRouter();
-  const session = useSession();
+  const { me } = useAuth();
 
   const email_address = methods.watch('email_address') as string;
   const username = methods.watch('username') as string;
@@ -53,8 +53,8 @@ export function NewUserTemplate({ user }: Props) {
 
       !!username && or.push({ username: { _eq: username } });
 
-      return session.data?.user
-        ? gqlMethods(session.data.user).Users({
+      return me
+        ? gqlMethods(me).Users({
             where: {
               _or: or,
             },
@@ -68,7 +68,7 @@ export function NewUserTemplate({ user }: Props) {
 
   const updateMutation = useMutation(
     'updateProfile',
-    session.data?.user && gqlMethods(session.data.user).update_user_profile,
+    me && gqlMethods(me).update_user_profile,
     {
       onSuccess() {
         snackbar.handleClick({ message: 'Profile updated!' });
@@ -79,7 +79,7 @@ export function NewUserTemplate({ user }: Props) {
 
   const imageUploadMutation = useMutation(
     'uploadImage',
-    session.data?.user && gqlMethods(session.data.user).upload_image
+    me && gqlMethods(me).upload_image
   );
 
   const validate = () => {

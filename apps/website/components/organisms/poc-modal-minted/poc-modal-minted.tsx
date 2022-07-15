@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
+import { PartialObjectDeep } from 'type-fest/source/partial-deep';
+
 import CloseIcon from '@mui/icons-material/Close';
 import { Button, SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -23,7 +25,7 @@ const style: SxProps = {
 /* It's defining the props that the modal will take. */
 interface ModalProps {
   open: boolean;
-  credential: Credentials | null;
+  credential: PartialObjectDeep<Credentials> | null;
   polygonURL: string;
   subsidised?: boolean;
   handleClose: () => void;
@@ -48,7 +50,7 @@ export default function PocModalMinted({
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         sx={{
-          overflowY: 'auto'
+          overflowY: 'auto',
         }}
       >
         <Box sx={style}>
