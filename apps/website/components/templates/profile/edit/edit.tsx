@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { yupResolver } from '@hookform/resolvers/yup';
-import { SessionUser } from 'apps/website/types/user';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useMutation, useQuery } from 'react-query';
 
@@ -11,8 +10,8 @@ import { ROUTES } from '../../../../constants/routes';
 import { useSnackbar } from '../../../../hooks/use-snackbar';
 import { useAuth } from '../../../../providers/auth';
 import { gqlMethods } from '../../../../services/api';
-import { Users } from '../../../../services/graphql/types.generated';
 import { queryClient } from '../../../../services/query-client';
+import { SessionUser } from '../../../../types/user';
 import { Form } from './form';
 import { schema, EditUserSchema, defaultValues } from './schema';
 
@@ -79,6 +78,9 @@ export function EditProfileTemplate() {
         snackbar.handleClick({ message: 'Profile updated!' });
         router.push(ROUTES.PROFILE);
       },
+      onError(err: any) {
+        snackbar.handleClick({ message: err.message, type: 'error' });
+      },
     }
   );
 
@@ -141,7 +143,7 @@ export function EditProfileTemplate() {
         ...(upload !== null && {
           pfp:
             'https://api.staging.mygateway.xyz/storage/file?id=' +
-            upload?.upload_image?.file.id,
+            upload?.upload_image?.id,
         }),
         discord_id: null,
       },

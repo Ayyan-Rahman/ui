@@ -237,7 +237,7 @@ export function EarnCredentialTemplate({ credential, user }) {
               </Grid>
             </Grid>
             <Divider light sx={{ width: '100%' }} />
-            {/* Credential details form */}
+            {/*
             <Grid
               container
               direction={{ xs: 'column', md: 'row' }}
@@ -265,6 +265,7 @@ export function EarnCredentialTemplate({ credential, user }) {
               </Grid>
             </Grid>
             <Divider light sx={{ width: '100%' }} />
+            */}
             {/* Proudest Accomplishments form */}
             <Grid
               container
