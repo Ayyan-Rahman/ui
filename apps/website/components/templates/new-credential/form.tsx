@@ -2,7 +2,13 @@ import { useRouter } from 'next/router';
 
 import { useFormContext } from 'react-hook-form';
 
-import { Button, Chip, Stack, TextField } from '@mui/material';
+import {
+  Button,
+  Chip,
+  CircularProgress,
+  Stack,
+  TextField,
+} from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -18,9 +24,10 @@ import { NewCredentialSchema } from './schema';
 type Props = {
   onSubmit: (data?: NewCredentialSchema) => void;
   validateWallets: (wallets: string[]) => Promise<boolean>;
+  isLoading: boolean;
 };
 
-export function Form({ validateWallets, onSubmit }: Props) {
+export function Form({ validateWallets, onSubmit, isLoading }: Props) {
   const router = useRouter();
 
   const {
@@ -80,7 +87,7 @@ export function Form({ validateWallets, onSubmit }: Props) {
         helperText={
           errors.wallets
             ? 'Invalid wallet(s) added'
-            : 'Press <Enter> to add the wallet'
+            : 'Press <Enter> or <Space> to add the wallet'
         }
         sx={{
           width: '100%',
@@ -99,9 +106,9 @@ export function Form({ validateWallets, onSubmit }: Props) {
         <Button
           variant="contained"
           type="submit"
-          disabled={Object.keys(errors).length > 0}
+          disabled={isLoading || Object.keys(errors).length > 0}
         >
-          Submit
+          {isLoading ? <CircularProgress color="inherit" size={24} /> : 'Save'}
         </Button>
         <Button
           variant="outlined"

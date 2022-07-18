@@ -12,6 +12,8 @@ import { Box, Stack, Typography } from '@mui/material';
 import { usePinata } from '../../../hooks/usePinata';
 import { useAuth } from '../../../providers/auth';
 import { gqlMethods } from '../../../services/api';
+import { queryClient } from '../../../services/query-client';
+import { SessionUser } from '../../../types/user';
 import PocModalCreated from '../../organisms/poc-modal-created/poc-modal-created';
 import { AvatarUploadCard } from './avatar-upload-card';
 import { Form } from './form';
@@ -37,7 +39,26 @@ export function NewCredentialTemplate() {
 
   const updateMutation = useMutation(
     'updateCredential',
-    me && gqlMethods(me).create_credential_group
+    me && gqlMethods(me).create_credential_group,
+    {
+      onSuccess: async (data) => {
+        await queryClient.cancelQueries('me');
+
+        queryClient.setQueryData<SessionUser>('me', (old) => ({
+          ...old,
+          credential_groups: [
+            ...old.credential_groups.filter(
+              (obj) => obj.id !== data.insert_credential_group_one.id
+            ),
+            data.insert_credential_group_one,
+          ],
+        }));
+
+        const createdGroupId = data.insert_credential_group_one.id;
+        setCredentialGroupId(createdGroupId);
+        handleOpen();
+      },
+    }
   );
 
   const validateWallets = async (wallets: string[]): Promise<boolean> => {
@@ -82,20 +103,11 @@ export function NewCredentialTemplate() {
 
     const imageHash = await uploadFileToIPFS(form);
 
-    updateMutation.mutate(
-      {
-        ...data,
-        wallets: data.wallets,
-        image: 'https://ipfs.mygateway.xyz/ipfs/' + imageHash,
-      },
-      {
-        onSuccess: (response) => {
-          const createdGroupId = response.insert_credential_group_one.id;
-          setCredentialGroupId(createdGroupId);
-          handleOpen();
-        },
-      }
-    );
+    updateMutation.mutate({
+      ...data,
+      wallets: data.wallets,
+      image: 'https://ipfs.mygateway.xyz/ipfs/' + imageHash,
+    });
   };
 
   return (
@@ -121,7 +133,11 @@ export function NewCredentialTemplate() {
         </Box>
         <FormProvider {...methods}>
           <Box width={{ xs: '100%', md: '25%' }} order={{ xs: '3', md: '2' }}>
-            <Form onSubmit={onSubmit} validateWallets={validateWallets} />
+            <Form
+              onSubmit={onSubmit}
+              validateWallets={validateWallets}
+              isLoading={updateMutation.isLoading}
+            />
           </Box>
           <AvatarUploadCard />
         </FormProvider>

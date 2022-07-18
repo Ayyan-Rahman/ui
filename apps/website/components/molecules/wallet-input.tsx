@@ -1,12 +1,27 @@
+import { useState } from 'react';
+
 import { Chip, TextField, Autocomplete } from '@mui/material';
 
 /* A React component that is exported as a named export. */
 export const WalletInput = ({ set, ...props }) => {
+  const [wallets, setWallets] = useState([]);
+  const [input, setInput] = useState<string>('');
+
   return (
     <Autocomplete
       multiple
       id="tags-filled"
       options={[]}
+      value={wallets}
+      inputValue={input}
+      onInputChange={(event, newInputValue, reason) => {
+        if (reason === 'reset') {
+          setInput('');
+          return;
+        } else {
+          setInput(newInputValue);
+        }
+      }}
       freeSolo
       renderTags={(value: string[], getTagProps) =>
         value.map((option: string, index: number) => (
@@ -34,7 +49,25 @@ export const WalletInput = ({ set, ...props }) => {
           {...props}
         />
       )}
-      onChange={(event, wallets) => set(wallets)}
+      onKeyDown={(event) => {
+        if (
+          (event.key === 'Enter' || event.key === ' ' || event.key === ',') &&
+          (event.target as HTMLInputElement).value.length &&
+          !wallets.includes((event.target as HTMLInputElement).value)
+        ) {
+          event.preventDefault();
+          setWallets((wallets) => [
+            ...wallets,
+            (event.target as HTMLInputElement).value,
+          ]);
+          set([...wallets, (event.target as HTMLInputElement).value]);
+          setInput('');
+        }
+      }}
+      onChange={(event, val: string[]) => {
+        setWallets(val);
+        set(val);
+      }}
     />
   );
 };

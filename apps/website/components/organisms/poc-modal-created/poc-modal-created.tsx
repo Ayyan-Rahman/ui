@@ -239,7 +239,7 @@ export default function PocModalCreated({
                 sx={{ margin: '10px 0 0 20px' }}
                 onClick={() => router.push('/profile')}
               >
-                Check Credential
+                Back to Profile
               </Button>
             </Box>
           </Box>
