@@ -1,7 +1,7 @@
 import { InferGetStaticPropsType } from 'next';
 import useTranslation from 'next-translate/useTranslation';
 import { useRouter } from 'next/router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { TOKENS } from '@gateway/theme';
 
@@ -25,6 +25,7 @@ import { ROUTES } from '../../../constants/routes';
 import { gqlAnonMethods } from '../../../services/api';
 import { ActivityTab } from './tabs/ActivityTab';
 import { OverviewTab } from './tabs/OverviewTab';
+import GuideCard from './edit-profile/Components/guide-card';
 
 export const getStaticProps = async () => {
   const exploreProps = await gqlAnonMethods.get_home();
@@ -41,6 +42,7 @@ export default function PrivateProfileTemplate() {
   const { t } = useTranslation();
   const { activeTab, handleTabChange, setTab } = useTab();
   const router = useRouter();
+  const [showCard, setShowCard] = useState(true);
 
   const tabs = useMemo(
     () => [
@@ -97,84 +99,94 @@ export default function PrivateProfileTemplate() {
               borderColor: 'background.default',
             }}
           ></Avatar>
-          <Box>
-            <Typography sx={{ color: '#fff' }} component="h1" variant="h4">
-              Test User
-              <EditIcon
-                onClick={() => router.push(ROUTES.EDIT_PROFILE)}
-                sx={{
-                  marginLeft: '15px',
-                  color: 'rgba(255, 255, 255, 0.56)',
-                  cursor: 'pointer',
-                }}
-              ></EditIcon>
-            </Typography>
-            <Typography
-              component="h5"
-              sx={{
-                fontSize: '16px',
-                fontWeight: '400',
-                color: 'rgba(255, 255, 255, 0.7)',
-              }}
-              variant="h6"
-            >
-              @testuser
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                columnGap: '10px',
-                mt: 2,
-              }}
-            >
-              <Link sx={{ textDecoration: 'none' }}>Write bio</Link>
+          <Box
+            sx={{
+              justifyContent: 'space-between',
+            }}
+            display={{ xs: 'block', md: 'flex' }}
+          >
+            <Box>
+              <Typography sx={{ color: '#fff' }} component="h1" variant="h4">
+                Test User
+                <EditIcon
+                  onClick={() => router.push(ROUTES.EDIT_PROFILE)}
+                  sx={{
+                    marginLeft: '15px',
+                    color: 'rgba(255, 255, 255, 0.56)',
+                    cursor: 'pointer',
+                  }}
+                ></EditIcon>
+              </Typography>
               <Typography
+                component="h5"
                 sx={{
                   fontSize: '16px',
                   fontWeight: '400',
                   color: 'rgba(255, 255, 255, 0.7)',
                 }}
-                width={{ xs: '100%', md: '50%' }}
+                variant="h6"
               >
-                Write about your years of experience, industry, or skills.
-                People also talk about their achievements or previous job
-                experiences.
+                @testuser
               </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                columnGap: '10px',
-                mt: 2,
-              }}
-            >
-              <Typography>O connections</Typography>.
-              <Typography>O credentials</Typography>
-            </Box>
-            <Stack
-              direction="row"
-              gap={1}
-              sx={{
-                mt: 4,
-              }}
-            >
-              <IconButton
+              <Box
                 sx={{
-                  p: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  columnGap: '10px',
+                  mt: 2,
                 }}
-                //onClick={onShare}
               >
-                <Avatar>
-                  <ShareIcon
-                    sx={{
-                      mt: -0.25,
-                    }}
-                  />
-                </Avatar>
-              </IconButton>
-            </Stack>
+                <Link sx={{ textDecoration: 'none' }}>Write bio</Link>
+                <Typography
+                  sx={{
+                    fontSize: '16px',
+                    fontWeight: '400',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                  width={{ xs: '100%', md: '50%' }}
+                >
+                  Write about your years of experience, industry, or skills.
+                  People also talk about their achievements or previous job
+                  experiences.
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  columnGap: '10px',
+                  mt: 2,
+                }}
+              >
+                <Typography>O connections</Typography>.
+                <Typography>O credentials</Typography>
+              </Box>
+              <Stack
+                direction="row"
+                gap={1}
+                sx={{
+                  mt: 4,
+                }}
+              >
+                <IconButton
+                  sx={{
+                    p: 0,
+                  }}
+                  //onClick={onShare}
+                >
+                  <Avatar>
+                    <ShareIcon
+                      sx={{
+                        mt: -0.25,
+                      }}
+                    />
+                  </Avatar>
+                </IconButton>
+              </Stack>
+            </Box>
+            <Box marginRight={{ xs: 5, md: 8 }} marginTop={{ xs: 5, md: 0 }}>
+              {showCard && <GuideCard {...{ setShowCard }} />}
+            </Box>
           </Box>
         </Box>
         <Box
