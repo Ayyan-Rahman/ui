@@ -1,9 +1,11 @@
+import { useState } from 'react';
+
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
 import { CircleOutlined, SquareOutlined } from '@mui/icons-material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
-import { Stack, TextField } from '@mui/material';
+import { Alert, Snackbar, Stack, TextField } from '@mui/material';
 
 import {
   CreateGateTypes,
@@ -30,10 +32,13 @@ export function OptionField({
     formState: { errors },
     control,
   } = useFormContext<CreateGateTypes>();
+
   const { fields: options, remove } = useFieldArray({
     control,
     name: `tasks.data.${taskId}.task_data.questions.${questionIndex}.options`,
   });
+
+  const [alert, setAlert] = useState<string | null>(null);
 
   watch(`tasks.data.${taskId}.task_data.questions.${questionIndex}.type`);
 
@@ -88,21 +93,20 @@ export function OptionField({
                   : theme.palette.text.primary,
               })}
               onClick={() => {
+                if (
+                  questionType === 'single' &&
+                  !value &&
+                  (options as Option[]).filter((option) => option.correct)
+                    .length > 0
+                ) {
+                  return setAlert(
+                    'To create more than one correct answer, change the question type to Multiple Answers'
+                  );
+                }
                 setValue(
                   `tasks.data.${taskId}.task_data.questions.${questionIndex}.options.${optionIndex}.correct`,
                   !value
                 );
-
-                if (
-                  questionType === 'single' &&
-                  (options as Option[]).filter((option) => option.correct)
-                    .length > 0
-                ) {
-                  setValue(
-                    `tasks.data.${taskId}.task_data.questions.${questionIndex}.type`,
-                    'multiple'
-                  );
-                }
               }}
             />
           )}
@@ -115,6 +119,15 @@ export function OptionField({
           />
         )}
       </Stack>
+      <Snackbar
+        open={alert && alert !== ''}
+        autoHideDuration={2000}
+        onClose={() => setAlert(null)}
+      >
+        <Alert severity="error" sx={{ width: '100%' }}>
+          {alert}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }

@@ -6,16 +6,18 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import {
+  Alert,
   Box,
   Button,
   Slider,
+  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 
-import { QuestionCreator } from '../../../organisms/question-creator/question-creator';
 import { CreateGateTypes } from '../../../templates/create-gate/schema';
+import { QuestionCreator } from './question-creator/question-creator';
 
 export function QuizTask({
   taskId,
@@ -33,6 +35,7 @@ export function QuizTask({
   } = useFormContext<CreateGateTypes>();
 
   const [taskVisible, setTaskVisible] = useState(false);
+  const [alert, setAlert] = useState<string | null>(null);
 
   const { fields: questions, append } = useFieldArray({
     name: `tasks.data.${taskId}.task_data.questions`,
@@ -58,6 +61,19 @@ export function QuizTask({
       ]);
     }
   }, [DEFAULT_QUESTION, setValue, getValues, taskId, questions]);
+
+  const addQuestion = () => {
+    const hasCorrectAnswers = questions
+      .at(-1)
+      .options.some((option) => option.correct);
+
+    if (hasCorrectAnswers) {
+      return append(DEFAULT_QUESTION());
+    }
+    return setAlert(
+      'You need at least one correct answer before create another question'
+    );
+  };
 
   return (
     <Stack
@@ -168,11 +184,7 @@ export function QuizTask({
         <QuestionCreator questions={questions} taskId={taskId} />
       </Box>
       <Stack alignItems={'flex-start'} sx={{ paddingTop: '30px' }}>
-        <Button
-          variant="text"
-          sx={{ px: 0 }}
-          onClick={() => append(DEFAULT_QUESTION())}
-        >
+        <Button variant="text" sx={{ px: 0 }} onClick={() => addQuestion()}>
           Add question
         </Button>
         <Stack
@@ -208,6 +220,15 @@ export function QuizTask({
           )}
         />
       </Stack>
+      <Snackbar
+        open={alert && alert !== ''}
+        autoHideDuration={2000}
+        onClose={() => setAlert(null)}
+      >
+        <Alert severity="error" sx={{ width: '100%' }}>
+          {alert}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }
