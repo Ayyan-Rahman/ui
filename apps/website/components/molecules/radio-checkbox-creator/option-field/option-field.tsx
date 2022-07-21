@@ -99,9 +99,7 @@ export function OptionField({
                   (options as Option[]).filter((option) => option.correct)
                     .length > 0
                 ) {
-                  return setAlert(
-                    'To create more than one correct answer, change the question type to Multiple Answers'
-                  );
+                  return setAlert('Change the question type to multiple');
                 }
                 setValue(
                   `tasks.data.${taskId}.task_data.questions.${questionIndex}.options.${optionIndex}.correct`,
