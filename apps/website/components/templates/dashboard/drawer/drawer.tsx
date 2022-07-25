@@ -21,9 +21,12 @@ import { DaosList } from './daos-list';
 import { DrawerContainer } from './drawer-container';
 import { ResponsiveDrawer } from './responsive-drawer';
 
-type Props = Pick<DashboardTemplateProps, 'currentDao' | 'showExplore'>;
+type Props = Pick<
+  DashboardTemplateProps,
+  'currentDao' | 'showExplore' | 'showDAOs'
+>;
 
-export function Drawer({ currentDao, showExplore }: Props) {
+export function Drawer({ currentDao, showExplore, showDAOs }: Props) {
   const router = useRouter();
 
   const { me } = useAuth();
@@ -70,38 +73,39 @@ export function Drawer({ currentDao, showExplore }: Props) {
                 </MotionTooltip>
               </Link>
             )}
-            {followingDaos?.map((dao) => {
-              const url = ROUTES.DAO_PROFILE.replace('[id]', dao.id);
-              const avatar = (
-                <AvatarFile file={dao?.logo} fallback={dao?.logo_url}>
-                  {dao.name?.[0]}
-                </AvatarFile>
-              );
+            {showDAOs &&
+              followingDaos?.map((dao) => {
+                const url = ROUTES.DAO_PROFILE.replace('[id]', dao.id);
+                const avatar = (
+                  <AvatarFile file={dao?.logo} fallback={dao?.logo_url}>
+                    {dao.name?.[0]}
+                  </AvatarFile>
+                );
 
-              return (
-                <Link key={dao.id} passHref href={url} prefetch={false}>
-                  <MotionTooltip
-                    layoutId={dao.id}
-                    title={dao.name}
-                    placement="right"
-                  >
-                    <ListItemButton
-                      component="a"
-                      aria-label={`Go to ${dao.name}`}
-                      className={clsx({ active: dao.id === currentDao?.id })}
+                return (
+                  <Link key={dao.id} passHref href={url} prefetch={false}>
+                    <MotionTooltip
+                      layoutId={dao.id}
+                      title={dao.name}
+                      placement="right"
                     >
-                      <ListItemIcon>
-                        {dao.is_admin ? (
-                          <AdminBadge>{avatar}</AdminBadge>
-                        ) : (
-                          avatar
-                        )}
-                      </ListItemIcon>
-                    </ListItemButton>
-                  </MotionTooltip>
-                </Link>
-              );
-            })}
+                      <ListItemButton
+                        component="a"
+                        aria-label={`Go to ${dao.name}`}
+                        className={clsx({ active: dao.id === currentDao?.id })}
+                      >
+                        <ListItemIcon>
+                          {dao.is_admin ? (
+                            <AdminBadge>{avatar}</AdminBadge>
+                          ) : (
+                            avatar
+                          )}
+                        </ListItemIcon>
+                      </ListItemButton>
+                    </MotionTooltip>
+                  </Link>
+                );
+              })}
           </AnimatePresence>
         </DaosList>
       </ResponsiveDrawer>

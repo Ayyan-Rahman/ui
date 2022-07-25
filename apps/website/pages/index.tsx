@@ -58,7 +58,11 @@ export default function Index() {
         scheduleDemoContent={scheduleDemoContent}
         footerContent={footerContent}
         connectButton={
-          <Link passHref href="/home">
+          <Link
+            passHref
+            href="https://blb4ytkp5bp.typeform.com/to/Wqn3x1Tu"
+            target="_blank"
+          >
             <Button
               variant="outlined"
               size="large"
@@ -72,7 +76,7 @@ export default function Index() {
                 },
               })}
             >
-              {t('openApp')}
+              {t('enterButtonTitle')}
             </Button>
           </Link>
         }
@@ -81,7 +85,11 @@ export default function Index() {
         menuList={menuList}
         titleDescription={t('titleDescription')}
         enterButton={
-          <Link passHref href="/home">
+          <Link
+            passHref
+            href="https://blb4ytkp5bp.typeform.com/to/Wqn3x1Tu"
+            target="_blank"
+          >
             <Button
               variant="contained"
               sx={{ height: '56px', marginTop: '38px' }}

@@ -8,4 +8,5 @@ export type DashboardTemplateProps = {
   currentDao?: PartialDeep<Daos>;
   containerProps?: BoxProps<'main'>;
   showExplore?: boolean;
+  showDAOs?: boolean;
 };

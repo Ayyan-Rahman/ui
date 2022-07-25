@@ -17,6 +17,7 @@ export function DashboardTemplate({
   children,
   containerProps,
   showExplore = true,
+  showDAOs = false,
 }: PropsWithChildren<DashboardTemplateProps>) {
   const { isOpen } = useNav();
 
@@ -41,7 +42,7 @@ export function DashboardTemplate({
             }
       }
     >
-      <Drawer {...{ currentDao, showExplore }} />
+      <Drawer {...{ currentDao, showExplore, showDAOs }} />
       <Box
         component="main"
         {...containerProps}
