@@ -40,6 +40,7 @@ export default function Index() {
     <>
       <LandingTemplate
         signUpButton={
+          null /*
           <Link passHref href="/home">
             <Button
               variant="contained"
@@ -49,6 +50,7 @@ export default function Index() {
               {t('signUp')}
             </Button>
           </Link>
+        */
         }
         theGatewayContent={theGatewayContent}
         buildAppsContent={buildAppsContent}
