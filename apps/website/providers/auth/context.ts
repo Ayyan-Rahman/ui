@@ -9,6 +9,10 @@ type Context = {
   me?: SessionUser;
   status: AuthStatus;
   gqlAuthMethods: GqlMethods;
+  fetchAuth: <T = unknown>(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ) => Promise<T>;
   onSignOut: () => void;
   onOpenLogin: () => void;
   onUpdateMe: (cb: (oldMe: SessionUser) => SessionUser) => SessionUser | void;
@@ -17,6 +21,7 @@ type Context = {
 export const AuthContext = createContext<Context>({
   status: 'UNAUTHENTICATED',
   gqlAuthMethods: gqlAnonMethods,
+  fetchAuth: (_input) => Promise.reject(new Error('Not authenticated')),
   onSignOut: () => {},
   onOpenLogin: () => {},
   onUpdateMe: () => {},

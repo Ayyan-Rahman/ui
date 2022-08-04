@@ -7,7 +7,7 @@ import { useAccount } from 'wagmi';
 import { WalletModal } from '../../components/organisms/wallet-modal';
 import { ROUTES } from '../../constants/routes';
 import useToggleContainerClass from '../../hooks/useToggleContainerClass';
-import { gqlMethodsWithRefresh } from '../../services/api';
+import { fetchClient, gqlMethodsWithRefresh } from '../../services/api';
 import { AuthContext } from './context';
 import { useInitUser, useMe } from './hooks';
 import { useAuthStatus } from './state';
@@ -38,6 +38,8 @@ export function AuthProvider({
       ),
     [tokens?.token, tokens?.refresh_token, me?.id, onUpdateToken]
   );
+
+  const fetchAuth = useMemo(() => fetchClient(tokens?.token, me?.id), []);
 
   const isBlocked = isAuthPage && (!me || !tokens);
 
@@ -73,6 +75,7 @@ export function AuthProvider({
         me,
         onUpdateMe,
         gqlAuthMethods,
+        fetchAuth,
       }}
     >
       {!isBlocked && children}
