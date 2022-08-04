@@ -14,7 +14,7 @@ const glqAnonClient = new GraphQLClient(
 
 export const gqlAnonMethods = getSdk(glqAnonClient);
 
-const gqlUserHeader = (token: string, userId?: string) => ({
+const userHeader = (token: string, userId?: string) => ({
   'X-Hasura-Role': 'user',
   Authorization: `Bearer ${token}`,
   ...(userId && { 'X-Hasura-User-Id': userId }),
@@ -22,8 +22,26 @@ const gqlUserHeader = (token: string, userId?: string) => ({
 
 const gqlClient = (token?: string, userId?: string) =>
   new GraphQLClient(process.env.NEXT_PUBLIC_HASURA_ENDPOINT, {
-    headers: token ? gqlUserHeader(token, userId) : undefined,
+    headers: token ? userHeader(token, userId) : undefined,
   });
+
+export const fetchClient = (token?: string, userId?: string) => {
+  const header = userHeader(token, userId);
+  // create a fetch wrapper with the headers
+  const fetchWrapper = async (url: string, options: any) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_NODE_ENDPOINT}${url}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...header,
+      },
+    });
+
+    return res.json();
+  };
+
+  return fetchWrapper;
+};
 
 export const gqlMethods = (token: string, userId?: string) =>
   getSdk(gqlClient(token, userId));
@@ -50,7 +68,7 @@ export const gqlMethodsWithRefresh = (
         )?.refresh;
 
         /* Saves the token on stored user */
-        const res = await action(gqlUserHeader(userId, newTokens.token));
+        const res = await action(userHeader(userId, newTokens.token));
         saveToken(newTokens);
         return res;
       }
