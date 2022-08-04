@@ -30,8 +30,8 @@ export default function DaoProfilePage({
   const editDAOMutation = useMutation(
     async (data: NewDAOSchema) => {
       const {
-        background: background64,
-        logo: logo64,
+        background: newBackground,
+        logo: newLogo,
         socials,
         ...daoData
       } = data;
@@ -39,25 +39,15 @@ export default function DaoProfilePage({
       const uploadLogo = async () => {
         const oldLogo = generateImageUrl(dao.logo.id);
 
-        if (logo64 === oldLogo) return dao.logo.id;
-        return (
-          await uploadImage({
-            base64: logo64,
-            name: `dao-logo-${data.name}-${me.id}`,
-          })
-        )?.upload_image?.id;
+        if (newLogo === oldLogo) return dao.logo.id;
+        return (await uploadImage(newLogo)).id;
       };
 
       const uploadBackground = async () => {
         const oldBackground = generateImageUrl(dao.background.id);
 
-        if (background64 === oldBackground) return dao.background.id;
-        return (
-          await uploadImage({
-            base64: background64,
-            name: `dao-bg-${data.name}-${me.id}`,
-          })
-        )?.upload_image?.id;
+        if (newBackground === oldBackground) return dao.background.id;
+        return (await uploadImage(newBackground)).id;
       };
 
       const [logo, bg] = await Promise.all([uploadLogo(), uploadBackground()]);

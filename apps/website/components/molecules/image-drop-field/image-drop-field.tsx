@@ -42,15 +42,17 @@ export function ImageDropField<TFormSchema extends FieldValues = FieldValues>({
     /* TODO: Mimetype validation */
     /* TODO: Filesize validation */
     const file = files[0];
+
+    if (!withCrop) {
+      onChange(file);
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = (event) => {
       const image = event.target.result as string;
-      if (withCrop) {
-        imageCropDialog.onOpen(image);
-      } else {
-        onChange(image);
-      }
+      imageCropDialog.onOpen(image);
     };
 
     reader.readAsDataURL(file);

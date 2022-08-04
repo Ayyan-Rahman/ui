@@ -1,6 +1,6 @@
 import normalizeUrl from 'normalize-url';
 import { PartialDeep } from 'type-fest';
-import { object, string, SchemaOf, array } from 'yup';
+import { object, string, SchemaOf, array, mixed } from 'yup';
 
 import { URL } from '../../../constants/forms';
 import { generateImageUrl } from '../../../hooks/use-file';
@@ -35,7 +35,7 @@ export const schema: SchemaOf<NewDAOSchema> = object({
   name: string().defined(),
   categories: array().of(string()).min(1).defined(),
   description: string().defined(),
-  background: string().defined(),
+  background: mixed().defined(),
   logo: string().defined(),
   socials: array().of(
     object({

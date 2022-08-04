@@ -25,20 +25,14 @@ export default function CreateDAO() {
       } = data;
 
       const [logo, bg] = await Promise.all([
-        uploadImage({
-          base64: logo64,
-          name: `dao-logo-${data.name}-${me.id}`,
-        }),
-        uploadImage({
-          base64: background64,
-          name: `dao-bg-${data.name}-${me.id}`,
-        }),
+        uploadImage(logo64),
+        uploadImage(background64),
       ]);
 
       return gqlAuthMethods.create_dao({
         ...daoData,
-        logo_id: logo.upload_image.id,
-        background_id: bg.upload_image.id,
+        logo_id: logo.id,
+        background_id: bg.id,
         socials: socials as any,
       });
     },

@@ -25,12 +25,7 @@ export default function EditProfilePage() {
           if (picture64 === oldLogo) return me.picture.id;
         }
 
-        return (
-          await uploadImage({
-            base64: picture64,
-            name: `user-pfp-${data.name}-${me.id}`,
-          })
-        )?.upload_image?.id;
+        return (await uploadImage(picture64))?.id;
       };
 
       const uploadCover = async () => {
@@ -39,12 +34,7 @@ export default function EditProfilePage() {
           if (cover64 === oldBackground) return me.cover.id;
         }
 
-        return (
-          await uploadImage({
-            base64: cover64,
-            name: `user-cover-${data.name}-${me.id}`,
-          })
-        )?.upload_image?.id;
+        return (await uploadImage(cover64))?.id;
       };
 
       const [picture, cover] = await Promise.all([

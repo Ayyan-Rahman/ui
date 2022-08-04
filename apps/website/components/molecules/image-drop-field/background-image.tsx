@@ -1,16 +1,22 @@
+import { useMemo } from 'react';
+
 import { Box } from '@mui/material';
 
 type Props = {
-  value: string;
+  value: string | File;
   isOver?: boolean;
 };
 
 export function BackgroundImage({ value, isOver }: Props) {
+  const preview = useMemo(
+    () => (value instanceof File ? URL.createObjectURL(value) : value),
+    [value]
+  );
   return (
     <Box
       className="field-image"
       sx={{
-        backgroundImage: `url(${value})`,
+        backgroundImage: `url(${preview})`,
         backgroundPosition: 'center',
         backgroundSize: 'cover',
         position: 'absolute',
