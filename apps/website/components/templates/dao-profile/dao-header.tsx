@@ -49,7 +49,7 @@ export function DaoHeader({
           position: 'relative',
           ...(!cover
             ? {
-                background: `url(${dao.background_url})`,
+                backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 59.46%), url(${dao.background_url})`,
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
               }
