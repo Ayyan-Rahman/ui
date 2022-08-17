@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 
 // Web3
 import { Biconomy } from '@biconomy/mexa';
-import { ethers } from 'ethers';
+import { Contract, ethers, Transaction } from 'ethers';
 import { useMutation } from 'react-query';
 import { PartialDeep } from 'type-fest';
-import { useAccount, chain, useSigner, useNetwork } from 'wagmi';
+import { useAccount, chain, useSigner, useNetwork, useContract } from 'wagmi';
 
 import { CREDENTIAL_ABI } from '../constants/web3';
 import { useAuth } from '../providers/auth';
@@ -16,6 +16,109 @@ import { useSnackbar } from './use-snackbar';
 
 let biconomy;
 let contract: ethers.Contract, contractInterface: ethers.ContractInterface;
+
+export function useBiconomy2() {
+  const { data: address } = useAccount();
+  const { me, gqlAuthMethods } = useAuth();
+  const [asksSignature, setAsksSignature] = useState<boolean>(false);
+
+  const biconomy = new Biconomy(window.ethereum, {
+    apiKey: process.env.NEXT_PUBLIC_WEB3_BICONOMY_API_KEY,
+    debug: true,
+    contractAddresses: [process.env.NEXT_PUBLIC_WEB3_NFT_ADDRESS],
+  });
+
+  const contract: Contract = useContract({
+    addressOrName: process.env.NEXT_PUBLIC_WEB3_NFT_ADDRESS,
+    contractInterface: CREDENTIAL_ABI,
+    signerOrProvider: biconomy.ethersProvider,
+  });
+
+  // Credential update
+  const { mutateAsync: updateCredential } = useMutation(
+    async (data: { id: string; tx_url: string }) => {
+      return await gqlAuthMethods.update_credential_status({
+        id: data.id,
+        status: 'minted',
+        transaction_url: data.tx_url,
+      });
+    }
+  );
+
+  useEffect(() => {
+    biconomy.init();
+  }, []);
+
+  const onMint = async (
+    token_uri = ''
+  ): Promise<{
+    transaction: any;
+    url: string;
+  }> => {
+    const provider = await biconomy.provider;
+
+    const { data: contractData } = await contract.populateTransaction.mint(
+      address.address,
+      token_uri
+    );
+
+    const txParams = {
+      data: contractData,
+      to: process.env.NEXT_PUBLIC_WEB3_NFT_ADDRESS,
+      from: address.address,
+      signatureType: 'EIP712_SIGN',
+    };
+
+    const tx = await provider.send(
+      {
+        method: 'eth_sendTransaction',
+        params: [txParams],
+      },
+      () => setAsksSignature(false)
+    );
+
+    setAsksSignature(true);
+
+    return {
+      transaction: tx,
+      url:
+        (process.env.NODE_ENV == 'production'
+          ? 'https://polygonscan.com'
+          : 'https://rinkeby.etherscan.io') +
+        '/tx/' +
+        tx,
+    };
+  };
+
+  const mintCredential = async (
+    credential: PartialDeep<Credentials>
+  ): Promise<{
+    transaction: any;
+    url: string;
+  }> => {
+    // 1. verify is the user owns the credential
+    if (credential.target_id !== me.id) {
+      throw new Error('You are not the owner of this credential!');
+    }
+
+    // 2. mint the NFT
+    const res = await onMint(credential?.uri || '');
+
+    // 3. change the status of the credential
+    await updateCredential({
+      id: credential.id,
+      tx_url: res.url,
+    });
+
+    return res;
+  };
+
+  return {
+    onMint,
+    mintCredential,
+    asksSignature,
+  };
+}
 
 /**
  * It mints a new NFT token
@@ -137,228 +240,215 @@ export function useMint(
  * @param {string | null} contractAddress - The address of the contract you want to interact
  * with.
  */
-export function useBiconomyMint(
-  contractAddress: string | null = process.env.NEXT_PUBLIC_WEB3_NFT_ADDRESS,
-  isMainnet: boolean = process.env.NODE_ENV === 'production'
-) {
-  // From Wagmi
-  const { data: address } = useAccount();
+// export function useBiconomyMint(
+//   contractAddress: string | null = process.env.NEXT_PUBLIC_WEB3_NFT_ADDRESS,
+//   isMainnet: boolean = process.env.NODE_ENV === 'production'
+// ) {
+//   // From Wagmi
+//   const { data: address } = useAccount();
 
-  // State
-  const metaTxEnabled = true;
-  const [loading, setLoading] = useState<boolean>(false);
-  const [minted, setMinted] = useState<boolean>(false);
-  const [asksSignature, setAsksSignature] = useState<boolean>(false);
+//   // State
+//   const [hasBiconomy, setHasBiconomy] = useState<boolean>(false);
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [minted, setMinted] = useState<boolean>(false);
+//   const [asksSignature, setAsksSignature] = useState<boolean>(false);
 
-  // Snackbar
-  const snackbar = useSnackbar();
+//   // Snackbar
+//   const snackbar = useSnackbar();
 
-  // User info
-  const { me, gqlAuthMethods } = useAuth();
+//   // User info
+//   const { me, gqlAuthMethods } = useAuth();
 
-  // Credential update
-  const { mutateAsync: updateCredential } = useMutation(
-    async (data: { id: string; tx_url: string }) => {
-      return await gqlAuthMethods.update_credential_status({
-        id: data.id,
-        status: 'minted',
-        transaction_url: data.tx_url,
-      });
-    }
-  );
+//   // Credential update
+//   const { mutateAsync: updateCredential } = useMutation(
+//     async (data: { id: string; tx_url: string }) => {
+//       return await gqlAuthMethods.update_credential_status({
+//         id: data.id,
+//         status: 'minted',
+//         transaction_url: data.tx_url,
+//       });
+//     }
+//   );
 
-  useEffect(() => {
-    async function init() {
-      if (
-        // TODO: check if we can use Wagmi's provider instead
-        typeof window.ethereum !== 'undefined' &&
-        window.ethereum.isMetaMask &&
-        address.address
-      ) {
-        // We're creating biconomy provider linked to your network of choice where your contract is deployed
-        const jsonRpcProvider = new ethers.providers.JsonRpcProvider(
-          isMainnet
-            ? process.env.NEXT_PUBLIC_WEB3_POLYGON_RPC
-            : process.env.NEXT_PUBLIC_WEB3_RINKEBY_RPC
-        );
+//   useEffect(() => {
+//     async function init() {
+//       if (
+//         // TODO: check if we can use Wagmi's provider instead
+//         typeof window.ethereum !== 'undefined' &&
+//         window.ethereum.isMetaMask &&
+//         address.address
+//       ) {
+//         // We're creating biconomy provider linked to your network of choice where your contract is deployed
+//         const jsonRpcProvider = new ethers.providers.JsonRpcProvider(
+//           isMainnet
+//             ? process.env.NEXT_PUBLIC_WEB3_POLYGON_RPC
+//             : process.env.NEXT_PUBLIC_WEB3_RINKEBY_RPC
+//         );
 
-        biconomy = new Biconomy(jsonRpcProvider, {
-          walletProvider: window.ethereum,
-          apiKey: process.env.NEXT_PUBLIC_WEB3_BICONOMY_API_KEY,
-          debug: process.env.NODE_ENV === 'development',
-        });
+//         biconomy = new Biconomy(jsonRpcProvider, {
+//           walletProvider: window.ethereum,
+//           apiKey: process.env.NEXT_PUBLIC_WEB3_BICONOMY_API_KEY,
+//           debug: process.env.NODE_ENV === 'development',
+//         });
 
-        biconomy
-          .onEvent(biconomy.READY, async () => {
-            // Initialize your dapp here like getting user accounts etc
-            contract = new ethers.Contract(
-              contractAddress,
-              CREDENTIAL_ABI,
-              biconomy.getSignerByAddress(address.address)
-            );
+//         biconomy
+//           .onEvent(biconomy.READY, async () => {
+//             // Initialize your dapp here like getting user accounts etc
+//             contract = new ethers.Contract(
+//               contractAddress,
+//               CREDENTIAL_ABI,
+//               biconomy.getSignerByAddress(address.address)
+//             );
 
-            contractInterface = new ethers.utils.Interface(CREDENTIAL_ABI);
-          })
-          .onEvent(biconomy.ERROR, (error, message) => {
-            // Handle error while initializing mexa
-            console.log(message);
-            console.log(error);
-          });
-      } else {
-        throw new Error('Metamask not installed!');
-      }
-    }
+//             contractInterface = new ethers.utils.Interface(CREDENTIAL_ABI);
 
-    init();
-  }, [address]);
+//             setHasBiconomy(true);
+//           })
+//           .onEvent(biconomy.ERROR, (error, message) => {
+//             // Handle error while initializing mexa
+//             console.log(message);
+//             console.log(error);
 
-  /**
-   * It mints a new NFT token.
-   * @param [token_uri] - This is the metadata that you want to attach to the token.
-   * @returns A boolean value.
-   */
-  const mint = async (
-    token_uri = ''
-  ): Promise<{
-    isMinted: boolean;
-    polygonURL?: string;
-    error?: any;
-  }> => {
-    if (contract) {
-      try {
-        if (metaTxEnabled) {
-          setLoading(true);
-          let tx;
+//             setHasBiconomy(false);
+//           });
+//       } else {
+//         throw new Error('Metamask not installed!');
+//       }
+//     }
 
-          const { data: contractData } =
-            await contract.populateTransaction.mint(address.address, token_uri);
+//     init();
+//   }, [address]);
 
-          const provider = biconomy.getEthersProvider();
-          const gasLimit = await provider.estimateGas({
-            to: contractAddress,
-            from: address.address,
-            data: contractData,
-          });
+//   /**
+//    * It mints a new NFT token.
+//    * @param [token_uri] - This is the metadata that you want to attach to the token.
+//    * @returns A boolean value.
+//    */
+//   const mint = async (
+//     token_uri = ''
+//   ): Promise<{
+//     isMinted: boolean;
+//     polygonURL?: string;
+//     error?: any;
+//   }> => {
+//     if (hasBiconomy) {
+//       try {
+//         setLoading(true);
+//         let tx;
 
-          const txParams = {
-            data: contractData,
-            to: contractAddress,
-            from: address.address,
-            gasLimit: gasLimit * 3,
-            signatureType: 'EIP712_SIGN',
-          };
+//         const { data: contractData } = await contract.populateTransaction.mint(
+//           address.address,
+//           token_uri
+//         );
 
-          try {
-            setAsksSignature(true);
-            const promise = provider.send('eth_sendTransaction', [txParams]);
-            setAsksSignature(false);
-            tx = await promise;
-          } catch (err) {
-            throw new Error('Minting failed! Try again later.');
-          }
+//         const provider = biconomy.getEthersProvider();
+//         const gasLimit = await provider.estimateGas({
+//           to: contractAddress,
+//           from: address.address,
+//           data: contractData,
+//         });
 
-          setMinted(true);
+//         const txParams = {
+//           data: contractData,
+//           to: contractAddress,
+//           from: address.address,
+//           gasLimit: gasLimit * 3,
+//           signatureType: 'EIP712_SIGN',
+//         };
 
-          return {
-            isMinted: true,
-            polygonURL:
-              (isMainnet
-                ? 'https://polygonscan.com'
-                : 'https://rinkeby.etherscan.io') +
-              '/tx/' +
-              tx,
-          };
-        } else {
-          const tx = await contract.mint(address.address, token_uri);
+//         try {
+//           setAsksSignature(true);
+//           const promise = provider.send('eth_sendTransaction', [txParams]);
+//           setAsksSignature(false);
+//           tx = await promise;
+//         } catch (err) {
+//           throw new Error('Minting failed! Try again later.');
+//         }
 
-          await tx.wait();
+//         setMinted(true);
 
-          setMinted(true);
-          setLoading(false);
+//         return {
+//           isMinted: true,
+//           polygonURL:
+//             (isMainnet
+//               ? 'https://polygonscan.com'
+//               : 'https://rinkeby.etherscan.io') +
+//             '/tx/' +
+//             tx,
+//         };
+//       } catch (error) {
+//         snackbar.onOpen({ message: error.message || error, type: 'error' });
+//         console.log('[useMint] Error:', error);
 
-          return {
-            isMinted: true,
-            polygonURL:
-              (isMainnet
-                ? 'https://polygonscan.com'
-                : 'https://rinkeby.etherscan.io') +
-              '/tx/' +
-              tx.hash,
-          };
-        }
-      } catch (error) {
-        snackbar.onOpen({ message: error.message || error, type: 'error' });
-        console.log('[useMint] Error:', error);
+//         setMinted(false);
+//         setLoading(false);
 
-        setMinted(false);
-        setLoading(false);
+//         return {
+//           isMinted: false,
+//           error,
+//         };
+//       }
+//     } else {
+//       snackbar.onOpen({
+//         message: 'Biconomy is still loading. Try again in a few minutes!',
+//         type: 'warning',
+//       });
+//     }
 
-        return {
-          isMinted: false,
-          error,
-        };
-      }
-    } else {
-      snackbar.onOpen({
-        message: 'Biconomy is still loading. Try again in a few minutes!',
-        type: 'warning',
-      });
-    }
+//     setMinted(false);
 
-    setMinted(false);
+//     return {
+//       isMinted: false,
+//     };
+//   };
 
-    return {
-      isMinted: false,
-    };
-  };
+//   const mintCredential = async (
+//     credential: PartialDeep<Credentials>
+//   ): Promise<{
+//     isMinted: boolean;
+//     polygonURL?: string;
+//     error?: any;
+//   }> => {
+//     try {
+//       // 1. verify is the user owns the credential
+//       if (credential.target_id !== me.id) {
+//         throw new Error('You are not the owner of this credential!');
+//       }
 
-  const mintCredential = async (
-    credential: PartialDeep<Credentials>
-  ): Promise<{
-    isMinted: boolean;
-    polygonURL?: string;
-    error?: any;
-  }> => {
-    try {
-      // 1. verify is the user owns the credential
-      if (credential.target_id !== me.id) {
-        throw new Error('You are not the owner of this credential!');
-      }
+//       // 2. mint the NFT
+//       const res = await mint(credential?.uri || '');
 
-      // 2. mint the NFT
-      const res = await mint(credential?.uri || '');
+//       if (res.error) {
+//         throw res.error;
+//       }
 
-      if (res.error) {
-        throw res.error;
-      }
+//       // 3. change the status of the credential
+//       await updateCredential({
+//         id: credential.id,
+//         tx_url: res.polygonURL,
+//       });
 
-      // 3. change the status of the credential
-      await updateCredential({
-        id: credential.id,
-        tx_url: res.polygonURL,
-      });
+//       return res;
+//     } catch (error) {
+//       console.log('[useMint] Error:', error);
 
-      return res;
-    } catch (error) {
-      console.log('[useMint] Error:', error);
+//       setMinted(false);
 
-      setMinted(false);
+//       return {
+//         isMinted: false,
+//         error,
+//       };
+//     }
+//   };
 
-      return {
-        isMinted: false,
-        error,
-      };
-    }
-  };
-
-  return {
-    mint,
-    mintCredential,
-    loading,
-    minted,
-    snackbar,
-    asksSignature,
-  };
-}
+//   return {
+//     mint,
+//     mintCredential,
+//     loading,
+//     minted,
+//     snackbar,
+//     asksSignature,
+//   };
+// }
 
 export default useMint;

@@ -1,3 +1,5 @@
+import dynamic from 'next/dynamic';
+
 import { DateTime } from 'luxon';
 import { PartialDeep } from 'type-fest';
 
@@ -11,6 +13,12 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 
 import { AvatarFile } from '../../../../../components/atoms/avatar-file';
 import { Experiences } from '../../../../../services/graphql/types.generated';
+
+// const MintCard = dynamic(
+//   () => import('../../../../molecules/mint-card').then((mod) => mod.MintCard),
+//   { ssr: false }
+// );
+
 import { MintCard } from '../../../../molecules/mint-card';
 
 type Props = {

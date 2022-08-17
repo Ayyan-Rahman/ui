@@ -14,7 +14,7 @@
   },
   "private": true,
   "dependencies": {
-    "@biconomy/mexa": "^2.0.33",
+    "@biconomy/mexa": "^3.0.2",
     "@emotion/react": "11.8.2",
     "@emotion/server": "11.4.0",
     "@emotion/styled": "11.8.1",
@@ -54,6 +54,8 @@
     "react-query": "^3.39.0",
     "react-use": "^17.3.2",
     "regenerator-runtime": "0.13.7",
+    "request": "^2.88.2",
+    "requests": "^0.3.0",
     "swiper": "^8.1.4",
     "tslib": "^2.0.0",
     "type-fest": "^2.12.2",
@@ -98,6 +100,7 @@
     "@typescript-eslint/parser": "~5.18.0",
     "babel-jest": "27.5.1",
     "babel-loader": "8.1.0",
+    "bufferutil": "^4.0.6",
     "concurrently": "^7.2.0",
     "cypress": "^9.1.0",
     "dotenv": "^16.0.0",
@@ -112,17 +115,21 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "7.29.4",
     "eslint-plugin-react-hooks": "4.4.0",
+    "fs": "^0.0.1-security",
     "jest": "27.5.1",
     "jest-playwright-preset": "^1.7.0",
+    "net": "^1.0.2",
     "nx": "14.0.3",
     "playwright": "^1.20.2",
     "prettier": "^2.5.1",
     "react-docgen-typescript": "^2.2.2",
     "react-test-renderer": "18.0.0",
     "swc-loader": "0.1.15",
+    "tls": "^0.0.1",
     "ts-jest": "27.1.4",
     "ts-node": "9.1.1",
     "typescript": "~4.6.2",
-    "url-loader": "^3.0.0"
+    "url-loader": "^3.0.0",
+    "utf-8-validate": "^5.0.9"
   }
 }
