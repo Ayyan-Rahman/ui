@@ -23,10 +23,10 @@ import { useMint } from '../../../hooks/use-mint';
 import { Gates } from '../../../services/graphql/types.generated';
 import { AvatarFile } from '../../atoms/avatar-file';
 import CircularProgressWithLabel from '../../atoms/circular-progress-label';
+import { ReadMore } from '../../atoms/read-more-less';
 import { ShareButton } from '../../atoms/share-button';
 import GateCompletedModal from '../../organisms/gates/view/modals/gate-completed';
 import { Task, TaskGroup } from '../../organisms/tasks';
-import { ReadMore } from '../../atoms/read-more-less';
 
 type Props = {
   gate: PartialDeep<Gates>;
@@ -67,7 +67,14 @@ export function GateViewTemplate({ gate }: Props) {
   return (
     <Grid container height="100%" sx={{ flexWrap: 'nowrap' }}>
       <GateCompletedModal open={open} handleClose={handleClose} gate={gate} />
-      <Grid item xs={12} md={5} p={(theme) => theme.spacing(7)}>
+      <Grid
+        item
+        xs={12}
+        md={5}
+        sx={(theme) => ({
+          p: { xs: theme.spacing(3), md: theme.spacing(7) },
+        })}
+      >
         {/* DAO info */}
         <Link passHref href={`/dao/${gate.dao.id}`}>
           <Stack
@@ -244,8 +251,13 @@ export function GateViewTemplate({ gate }: Props) {
         <Stack
           direction="row"
           alignItems="center"
-          m={(theme) => theme.spacing(7)}
-          marginBottom={(theme) => theme.spacing(10)}
+          sx={(theme) => ({
+            m: {
+              xs: theme.spacing(2),
+              md: theme.spacing(7),
+            },
+            mb: { xs: 3, md: 10 },
+          })}
         >
           <CircularProgressWithLabel
             variant="determinate"
@@ -253,9 +265,9 @@ export function GateViewTemplate({ gate }: Props) {
             label={`${completedTasksCount}/${gate.tasks.length}`}
           />
           <Stack
-            sx={{
-              marginLeft: (theme) => theme.spacing(4),
-            }}
+            sx={(theme) => ({
+              ml: { xs: theme.spacing(1), md: theme.spacing(4) },
+            })}
           >
             <Typography variant="h6">Tasks</Typography>
             <Typography variant="caption">
