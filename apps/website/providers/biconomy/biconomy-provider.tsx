@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import debounce from 'lodash/debounce';
 import { useMutation, useQueryClient } from 'react-query';
 import { PartialDeep } from 'type-fest';
-import { useAccount } from 'wagmi';
+import { useAccount, useNetwork, useSigner } from 'wagmi';
 
 import { Alert, Snackbar } from '@mui/material';
 
@@ -21,8 +21,6 @@ type Props = {
 };
 
 export let biconomy: Biconomy;
-export let contract: ethers.Contract;
-export let contractInterface: ethers.ContractInterface;
 
 export type MintStatus = {
   [key: string]: {
@@ -31,6 +29,8 @@ export type MintStatus = {
     error: any;
   };
 };
+
+// Reference: https://github.com/bcnmy/gasless-playground/blob/master/src/components/Ethers_Custom_PersonalSign.tsx
 
 export function BiconomyProvider({
   apiKey,
@@ -47,6 +47,8 @@ export function BiconomyProvider({
 
   // From Wagmi
   const { data: address } = useAccount();
+  const { data: signer } = useSigner();
+  const { activeChain } = useNetwork();
 
   // From auth
   const { me, gqlAuthMethods } = useAuth();
@@ -97,38 +99,58 @@ export function BiconomyProvider({
   useEffect(() => {
     async function init() {
       // We're creating biconomy provider linked to your network of choice where your contract is deployed
-      const jsonRpcProvider = new ethers.providers.JsonRpcProvider(
-        RPC[process.env.NEXT_PUBLIC_MINT_CHAIN]
-      );
+      // const jsonRpcProvider = new ethers.providers.JsonRpcProvider(
+      //   RPC[process.env.NEXT_PUBLIC_MINT_CHAIN]
+      // );
 
-      biconomy = new Biconomy(jsonRpcProvider, {
-        walletProvider: window.ethereum,
+      biconomy = new Biconomy(window.ethereum, {
         apiKey: process.env.NEXT_PUBLIC_WEB3_BICONOMY_API_KEY,
-        debug: process.env.NODE_ENV === 'development',
+        debug: true,
+        contractAddresses: [contractAddress],
       });
 
-      biconomy
-        .onEvent(biconomy.READY, async () => {
-          // Initialize your dapp here like getting user accounts etc
-          contract = new ethers.Contract(
-            contractAddress,
-            CREDENTIAL_ABI,
-            biconomy.getSignerByAddress(address.address)
-          );
+      await biconomy.init();
 
-          contractInterface = new ethers.utils.Interface(CREDENTIAL_ABI);
-        })
-        .onEvent(biconomy.ERROR, (error, message) => {
-          // Handle error while initializing mexa
-          console.log(message);
-          console.log(error);
-        });
+      // biconomy
+      //   .onEvent(biconomy.READY, async () => {
+      //     // Initialize your dapp here like getting user accounts etc
+      //     contract = new ethers.Contract(
+      //       contractAddress,
+      //       CREDENTIAL_ABI,
+      //       biconomy.getSignerByAddress(address.address)
+      //     );
+
+      //     contractInterface = new ethers.utils.Interface(CREDENTIAL_ABI);
+      //   })
+      //   .onEvent(biconomy.ERROR, (error, message) => {
+      //     // Handle error while initializing mexa
+      //     console.log(message);
+      //     console.log(error);
+      //   });
     }
 
-    if (typeof window !== 'undefined' && (address?.address ?? false)) {
+    if (address && activeChain && signer?.provider) {
       init();
     }
-  }, [address?.address]);
+  }, [address, activeChain, signer?.provider]);
+
+  const getSignatureParametersEthers = (signature: any) => {
+    if (!ethers.utils.isHexString(signature)) {
+      throw new Error(
+        'Given value "'.concat(signature, '" is not a valid hex string.')
+      );
+    }
+    const r = signature.slice(0, 66);
+    const s = '0x'.concat(signature.slice(66, 130));
+    let v = '0x'.concat(signature.slice(130, 132));
+    v = ethers.BigNumber.from(v).toString();
+    if (![27, 28].includes(Number(v))) v += 27;
+    return {
+      r: r,
+      s: s,
+      v: Number(v),
+    };
+  };
 
   /**
    * It mints a new NFT token.
@@ -136,28 +158,85 @@ export function BiconomyProvider({
    * @returns A boolean value.
    */
   const mint = async (token_uri = ''): Promise<MintResponse> => {
-    if (contract) {
+    try {
+      // let tx: string;
+
+      // const provider = await biconomy.provider;
+      // const contractInstance = new ethers.Contract(
+      //   contractAddress,
+      //   CREDENTIAL_ABI,
+      //   biconomy.ethersProvider
+      // );
+
+      // const { data: contractData } =
+      //   await contractInstance.populateTransaction.mint(
+      //     address.address,
+      //     token_uri
+      //   );
+
+      // const gasLimit = await provider.estimateGas({
+      //   to: contractAddress,
+      //   from: address.address,
+      //   data: contractData,
+      // });
+
+      // const txParams = {
+      //   data: contractData,
+      //   to: contractAddress,
+      //   from: address.address,
+      //   gasLimit: gasLimit.toNumber() * 3,
+      //   signatureType: 'EIP712_SIGN',
+      // };
       let tx: string;
 
-      const { data: contractData } = await contract.populateTransaction.mint(
+      const userAddress = address;
+      const ethersProvider = new ethers.providers.Web3Provider(
+        window.ethereum as any
+      );
+      const walletProvider = ethersProvider.getSigner();
+      const contractInstance = new ethers.Contract(
+        contractAddress,
+        CREDENTIAL_ABI,
+        biconomy.ethersProvider
+      );
+      const nonce = await contractInstance.getNonce(userAddress);
+      const contractInterface = new ethers.utils.Interface(CREDENTIAL_ABI);
+      const functionSignature = contractInterface.encodeFunctionData('mint', [
         address.address,
-        token_uri
+        token_uri,
+      ]);
+
+      const messageToSign = ethers.utils.solidityKeccak256(
+        ['uint256', 'address', 'uint256', 'bytes'],
+        [
+          nonce.toNumber(),
+          contractAddress,
+          Number(activeChain.network),
+          Buffer.from(functionSignature, 'hex'),
+        ]
       );
 
-      const provider: ethers.providers.Web3Provider =
-        biconomy.getEthersProvider();
-      const gasLimit = await provider.estimateGas({
-        to: contractAddress,
-        from: address.address,
-        data: contractData,
-      });
+      const signature = await walletProvider.signMessage(messageToSign);
+
+      const { r, s, v } = getSignatureParametersEthers(signature);
+      console.log(r, s, v);
+
+      const provider = await biconomy.provider;
+
+      const { data } =
+        await contractInstance.populateTransaction.executeMetaTransaction(
+          userAddress,
+          functionSignature,
+          r,
+          s,
+          v
+        );
 
       const txParams = {
-        data: contractData,
+        data: data,
         to: contractAddress,
-        from: address.address,
-        gasLimit: gasLimit.toNumber() * 3,
-        signatureType: 'EIP712_SIGN',
+        from: userAddress,
+        signatureType: 'PERSONAL_SIGN',
       };
 
       try {
@@ -212,6 +291,13 @@ export function BiconomyProvider({
         };
       }
 
+      biconomy.on('txHashGenerated', (data: any) => {
+        console.log(data);
+      });
+      biconomy.on('txMined', (data: any) => {
+        console.log(data);
+      });
+
       return {
         isMinted: true,
         transactionUrl:
@@ -221,7 +307,7 @@ export function BiconomyProvider({
           '/tx/' +
           tx,
       };
-    } else {
+    } catch (err) {
       snackbar.onOpen({
         message: 'Biconomy is still loading. Try again in a few minutes!',
         type: 'warning',

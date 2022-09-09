@@ -14,7 +14,7 @@
   },
   "private": true,
   "dependencies": {
-    "@biconomy/mexa": "^2.0.33",
+    "@biconomy/mexa": "^3.0.4",
     "@cyberlab/cyberconnect": "^4.5.0",
     "@emotion/react": "11.8.2",
     "@emotion/server": "11.4.0",
@@ -101,6 +101,7 @@
     "@typescript-eslint/parser": "~5.18.0",
     "babel-jest": "27.5.1",
     "babel-loader": "8.1.0",
+    "bufferutil": "^4.0.6",
     "concurrently": "^7.2.0",
     "cypress": "^9.1.0",
     "dotenv": "^16.0.0",
@@ -116,14 +117,18 @@
     "eslint-plugin-react": "7.29.4",
     "eslint-plugin-react-hooks": "4.4.0",
     "jest": "27.5.1",
+    "net": "^1.0.2",
     "nx": "14.0.3",
     "prettier": "^2.5.1",
     "react-docgen-typescript": "^2.2.2",
     "react-test-renderer": "18.0.0",
+    "request": "^2.88.2",
     "swc-loader": "0.1.15",
+    "tls": "^0.0.1",
     "ts-jest": "27.1.4",
     "ts-node": "9.1.1",
     "typescript": "~4.6.2",
-    "url-loader": "^3.0.0"
+    "url-loader": "^3.0.0",
+    "utf-8-validate": "^5.0.9"
   }
 }
