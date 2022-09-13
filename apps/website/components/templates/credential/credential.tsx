@@ -243,11 +243,7 @@ export function CredentialTemplate({ credential, openModal }: Props) {
               </Grid>
               <Grid item xs={8}>
                 <AvatarGroup
-                  total={
-                    credential?.gate?.holders.length >= 5
-                      ? 5
-                      : credential?.gate?.holders.length
-                  }
+                  total={credential?.gate?.holders.length}
                   sx={{
                     justifyContent: 'flex-end',
                   }}
@@ -260,7 +256,7 @@ export function CredentialTemplate({ credential, openModal }: Props) {
                         href={`/profile/${holder.username}`}
                       >
                         <Tooltip title={holder.name}>
-                          <Box component="a" sx={{ display: 'inline-block' }}>
+                          <Box component="a" marginLeft={-1}>
                             <AvatarFile
                               alt={holder.username}
                               file={holder.picture}
