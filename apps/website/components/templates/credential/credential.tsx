@@ -246,6 +246,9 @@ export function CredentialTemplate({ credential, openModal }: Props) {
                   total={credential?.gate?.holders.length}
                   sx={{
                     justifyContent: 'flex-end',
+                    '& .MuiAvatar-root': {
+                      fontSize: 12,
+                    },
                   }}
                 >
                   {credential?.gate?.holders.map((holder) => {

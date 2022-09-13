@@ -342,13 +342,12 @@ export function GateViewTemplate({ gateProps }: GateViewProps) {
                 </Grid>
                 <Grid item xs={8}>
                   <AvatarGroup
-                    total={
-                      gateProps?.holders.length >= 5
-                        ? 5
-                        : gateProps?.holders.length
-                    }
+                    total={gateProps?.holders.length}
                     sx={{
                       justifyContent: 'flex-end',
+                      '& .MuiAvatar-root': {
+                        fontSize: 12,
+                      },
                     }}
                   >
                     {gateProps?.holders.map((holder) => {
@@ -359,11 +358,11 @@ export function GateViewTemplate({ gateProps }: GateViewProps) {
                           href={`/profile/${holder.username}`}
                         >
                           <Tooltip title={holder.name}>
-                            <Box component="a" sx={{ display: 'inline-block' }}>
+                            <Box component="a" marginLeft={-1}>
                               <AvatarFile
                                 alt={holder.username}
                                 file={holder.picture}
-                                fallback={holder.pfp || '/logo.png'}
+                                fallback={holder.pfp || '/avatar.png'}
                               />
                             </Box>
                           </Tooltip>
