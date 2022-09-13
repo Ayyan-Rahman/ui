@@ -34,7 +34,8 @@ export function AuthProvider({
         tokens?.token,
         tokens?.refresh_token,
         me?.id,
-        onUpdateToken
+        onUpdateToken,
+        async () => onSignOut()
       ),
     [tokens?.token, tokens?.refresh_token, me?.id, onUpdateToken]
   );

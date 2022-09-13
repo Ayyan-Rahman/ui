@@ -33,7 +33,8 @@ export const gqlMethodsWithRefresh = (
   refreshToken: string,
   userId: string | undefined,
   // saves the new token to the user. The callback response doesn't matter
-  saveToken: (newTokens: RefreshMutation['refresh']) => Promise<any>
+  saveToken: (newTokens: RefreshMutation['refresh']) => Promise<any>,
+  onInvalidRefreshToken?: () => Promise<any>
 ) => {
   const wrapper: SdkFunctionWrapper = async (action) => {
     try {
@@ -42,19 +43,38 @@ export const gqlMethodsWithRefresh = (
     } catch (e) {
       const isExpiredToken =
         e?.response?.errors?.[0].extensions.code === 'invalid-jwt';
-      if (isExpiredToken) {
-        /* Retrieves the new token */
-        const newTokens = (
-          await gqlAnonMethods.refresh({
-            refresh_token: refreshToken,
-          })
-        )?.refresh;
 
-        /* Saves the token on stored user */
-        const res = await action(gqlUserHeader(userId, newTokens.token));
-        await saveToken(newTokens);
-        return res;
+      console.log('isExpiredToken', isExpiredToken);
+
+      if (isExpiredToken) {
+        try {
+          /* Retrieves the new token */
+          const newTokens = (
+            await gqlAnonMethods.refresh({
+              refresh_token: refreshToken,
+            })
+          )?.refresh;
+
+          /* Saves the token on stored user */
+          const res = await action(gqlUserHeader(userId, newTokens.token));
+          await saveToken(newTokens);
+          return res;
+        } catch (e) {
+          const isInvalidRefreshToken =
+            e?.response?.errors?.[0].extensions.code ===
+            'INVALID_REFRESH_TOKEN';
+
+          console.log('isInvalidRefreshToken', isInvalidRefreshToken);
+
+          if (isInvalidRefreshToken) {
+            await onInvalidRefreshToken?.(); // Optional function, but ideally to clear the cookies/cache
+            const res = await action();
+
+            return res;
+          }
+        }
       }
+
       throw e;
     }
   };
