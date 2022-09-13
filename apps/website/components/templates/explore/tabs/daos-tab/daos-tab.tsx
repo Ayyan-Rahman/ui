@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { TOKENS } from '@gateway/theme';
 
@@ -10,15 +10,24 @@ import { usePropertyFilter } from '../../../../../hooks/use-property-filter';
 import { useViewMode, ViewMode } from '../../../../../hooks/use-view-modes';
 import { gqlAnonMethods } from '../../../../../services/api';
 import { ChipDropdown } from '../../../../molecules/chip-dropdown';
-import { DaoCard } from '../../../../molecules/dao-card';
+import { GridView } from './grid-view';
 import { TableView } from './table-view';
 
 export function DaosTab() {
   const { view, toggleView } = useViewMode();
-  /* TODO: !!!!!!!!!!!! WRITE PAGINATION!!!!!!!!!!!!!! */
-  const { data: daos, isLoading } = useQuery(['daos-tab'], async () => {
-    return (await gqlAnonMethods.daos_tab()).daos;
-  });
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfiniteQuery(
+      ['people-tab'],
+      ({ pageParam = 0 }) => gqlAnonMethods.daos_tab({ offset: pageParam }),
+      {
+        getNextPageParam: (lastPage, pages) => {
+          if (lastPage.daos.length < 15) return undefined;
+          return pages.length * 15;
+        },
+      }
+    );
+
+  const daos = data?.pages?.flatMap((page) => page.daos) ?? [];
 
   const {
     selectedFilters,
@@ -66,22 +75,25 @@ export function DaosTab() {
             </IconButton>
           </Stack>
           {view === ViewMode.grid && (
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  md: 'repeat(3, 1fr)',
-                },
-                gap: 2,
-                px: TOKENS.CONTAINER_PX,
+            <GridView
+              {...{
+                hasNextPage,
+                isFetchingNextPage,
+                fetchNextPage,
+                data: filteredDaos,
               }}
-            >
-              {filteredDaos.map((dao) => (
-                <DaoCard key={`dao-${dao.id}`} {...dao} />
-              ))}
-            </Box>
+            ></GridView>
           )}
-          {view === ViewMode.table && <TableView daos={filteredDaos} />}
+          {view === ViewMode.table && (
+            <TableView
+              {...{
+                hasNextPage,
+                isFetchingNextPage,
+                fetchNextPage,
+                data: filteredDaos,
+              }}
+            />
+          )}
         </>
       )}
     </Box>

@@ -1,9 +1,8 @@
-import useTranslation from 'next-translate/useTranslation';
 import Link from 'next/link';
 
 import { TOKENS } from '@gateway/theme';
 
-import { Avatar, Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -13,19 +12,31 @@ import TableRow from '@mui/material/TableRow';
 
 import { categoriesMap } from '../../../../../constants/dao';
 import { ROUTES } from '../../../../../constants/routes';
+import {
+  useVirtualInfiniteScroll,
+  VirtualContainerProps,
+} from '../../../../../hooks/use-virtual-infinite-scroll';
 import { useAuth } from '../../../../../providers/auth';
+import { Daos } from '../../../../../services/graphql/types.generated';
 import { AvatarFile } from '../../../../atoms/avatar-file';
+import { CenteredLoader } from '../../../../atoms/centered-loader';
 import { FollowButtonDAO } from '../../../../atoms/follow-button-dao';
-import { ExploreProps } from '../../types';
 
-// TODO: make it generic
-// TODO: Fix Dao name column width
-
-type Props = {
-  daos: ExploreProps['daos'];
-};
-export function TableView({ daos }: Props) {
+export function TableView({
+  data: daos,
+  hasNextPage,
+  fetchNextPage,
+  isFetchingNextPage,
+}: VirtualContainerProps<Daos>) {
   const { me } = useAuth();
+
+  const { items, rowVirtualizer } = useVirtualInfiniteScroll({
+    data: daos,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  });
+
   return (
     <TableContainer
       sx={{
@@ -45,8 +56,33 @@ export function TableView({ daos }: Props) {
             <TableCell align="left"></TableCell>
           </TableRow>
         </TableHead>
-        <TableBody>
-          {daos.map((dao) => {
+        <TableBody
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {items.map((row) => {
+            const { size, start, index } = row;
+            const isLoaderRow = index > daos.length - 1;
+            const dao = daos[index];
+            if (!hasNextPage && isLoaderRow) return null;
+            if (isLoaderRow) {
+              return (
+                <CenteredLoader
+                  key={row.index}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${size}px`,
+                    transform: `translateY(${start}px)`,
+                  }}
+                />
+              );
+            }
             const isAdmin = dao.permissions.some(
               ({ user_id, permission }) =>
                 user_id === me?.id && permission === 'dao_admin'
